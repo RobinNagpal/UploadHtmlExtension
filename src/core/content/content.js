@@ -193,6 +193,13 @@ async function savePage(message) {
 }
 
 async function processPage(options) {
+	const shouldShowModal = true;
+
+	if (shouldShowModal) {
+		return;
+	}
+
+
 	const frames = singlefile.processors.frameTree;
 	let framesSessionId;
 	options.keepFilename = options.saveToGDrive || options.saveToGitHub || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3;
