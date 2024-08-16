@@ -196,6 +196,18 @@ async function processPage(options) {
 	const shouldShowModal = true;
 
 	if (shouldShowModal) {
+		// if spaceId not present
+					// show login screen to get API key. For now we dont need to have API key, we can just input spaceId here
+		// Based on the API Key(spaceId for now), we can call the clickable demos API and show the list of clickable demos list
+
+		// If a demo is already selected
+				// show the clickable demo name and also a button to give the option to select another clickable demo to upload the page to. "Also show an upload button"
+						// If user clicks on the button, then set the selected demo as null/undefined and show the list of demos for selection
+		// Show the list of demos and ask for selection. If use selects a demo. Go to the flow defined in (If a demo is already selected)
+
+		// When user clicks on Upload button, ask for the name of the file to be uploaded.
+
+
 		return;
 	}
 
