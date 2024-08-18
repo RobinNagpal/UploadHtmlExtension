@@ -193,16 +193,12 @@ async function savePage(message) {
 	clearInterval(pingInterval);
 }
 
-
-
 async function processPage(options) {
 	const shouldShowModal = true;
-
 	if (shouldShowModal) {
 		await takeInputsFromUser(() => {
 			console.log('Callback function called');
 		});
-
 		return;
 	}
 

@@ -286,9 +286,6 @@ function updateFilenameTemplate(template) {
 
 async function getRule(url, ignoreWildcard) {
 	const { rules } = await configStorage.get(["rules"]);
-	if(!rules) {
-		return;
-	}
 	const regExpRules = rules.filter(rule => testRegExpRule(rule));
 	let rule = regExpRules.sort(sortRules).find(rule => url && url.match(new RegExp(rule.url.split(REGEXP_RULE_PREFIX)[1])));
 	if (!rule) {

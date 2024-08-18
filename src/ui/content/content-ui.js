@@ -33,7 +33,6 @@ const PROGRESSBAR_CLASSNAME = "singlefile-progress-bar";
 const PROGRESSBAR_CONTENT_CLASSNAME = "singlefile-progress-bar-content";
 const SELECTION_ZONE_TAGNAME = "single-file-selection-zone";
 const LOGS_WINDOW_TAGNAME = "singlefile-logs-window";
-const DODAO_LOGIN_PAGE = "dodao-login-page";
 const LOGS_CLASSNAME = "singlefile-logs";
 const LOGS_LINE_CLASSNAME = "singlefile-logs-line";
 const LOGS_LINE_TEXT_ELEMENT_CLASSNAME = "singlefile-logs-line-text";
@@ -73,7 +72,7 @@ export {
 	onStartStage,
 	onEndStage,
 	onPageLoading,
-	onLoadPage,
+	onLoadPage
 };
 
 function promptMessage(message, defaultValue) {
