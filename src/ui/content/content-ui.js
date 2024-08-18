@@ -54,7 +54,6 @@ try {
 
 let selectedAreaElement, logsWindowElement;
 createLogsWindowElement();
-createDoDAOLoginWindowElement();
 
 export {
 	getSelectedLinks,
@@ -75,7 +74,6 @@ export {
 	onEndStage,
 	onPageLoading,
 	onLoadPage,
-	createDoDAOLoginWindowElement
 };
 
 function promptMessage(message, defaultValue) {
@@ -570,49 +568,6 @@ function createLogsWindowElement() {
 	} catch (error) {
 		// ignored
 	}
-}
-
-function createDoDAOLoginWindowElement() {
-	console.log('Creating DoDAO login page');
-	let dodaoLoginPage = document.querySelector('#dodao-login-page-wrapper');
-	if (!dodaoLoginPage) {
-		dodaoLoginPage = document.createElement('div');
-		dodaoLoginPage.id = 'dodao-login-page-wrapper';
-		document.body.appendChild(dodaoLoginPage); // Append the login page to the body
-		const shadowRoot = dodaoLoginPage.attachShadow({mode: "open"});
-		const styleElement = document.createElement("style");
-		styleElement.textContent = `
-				.dodao-login-page {
-					position: fixed;
-					top: 0;
-					left: 0;
-					width: 100%;
-					height: 100%;
-					z-index: 2147483647;
-					opacity: 0.9;
-					background-color: white;
-					display: flex;
-					justify-content: center;
-					align-items: center; // Center the content vertically and horizontally
-					transition: opacity 100ms;
-				}
-				.api-key-input {
-					padding: 10px;
-					font-size: 16px;
-					width: 300px; // Specifies the width of the input
-				}
-			`;
-		shadowRoot.appendChild(styleElement);
-		const dodaoLoginPageElement = document.createElement("div");
-		dodaoLoginPageElement.classList.add('dodao-login-page');
-		const inputElement = document.createElement("input");
-		inputElement.type = 'text';
-		inputElement.placeholder = 'Enter your API key';
-		inputElement.classList.add('api-key-input');
-		dodaoLoginPageElement.appendChild(inputElement); // Adding the input element to the page
-		shadowRoot.appendChild(dodaoLoginPageElement);
-	}
-	console.log('Dodao login page created');
 }
 
 function updateLog(id, textContent, textStatus, options) {
