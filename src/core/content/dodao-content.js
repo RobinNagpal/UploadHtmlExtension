@@ -114,24 +114,28 @@ function selectDemo(demo) {
 
 function createNewModalElement(placeholder = '', inputClass = '', inputType = 'text') {
   // Check if a modal already exists and remove it
-  const existingModal = document.getElementById('modal-wrapper');
-  if (existingModal) {
-    existingModal.remove();
+  let fullScreenModalWrapper = document.getElementById('dodao-full-screen-modal-wrapper');
+  if (fullScreenModalWrapper) {
+    fullScreenModalWrapper.remove();
   }
 
-  // Create a new modal element
+  // Create a new full-screen modal wrapper
+  fullScreenModalWrapper = document.createElement('div');
+  fullScreenModalWrapper.id = 'dodao-full-screen-modal-wrapper';
+  document.body.appendChild(fullScreenModalWrapper);
+
+  // Attach shadow DOM for style encapsulation
+  const shadowRoot = fullScreenModalWrapper.attachShadow({mode: "open"});
+  shadowRoot.appendChild(createModalStyle());
+
+  // Create a modal container within the shadow root
   const modalElement = document.createElement('div');
   modalElement.id = 'modal-wrapper';
   modalElement.classList.add('full-screen-modal');
 
-  // Create shadow DOM to encapsulate styles
-  const shadowRoot = modalElement.attachShadow({mode: "open"});
-  shadowRoot.appendChild(createModalStyle());
-
-  // Create the content element inside the modal
+  // Create content element inside the modal container
   const contentElement = document.createElement("div");
   contentElement.classList.add('modal-content');
-  contentElement.classList.add('full-screen-modal');
 
   // Optionally add an input element if required
   if (inputClass) {
@@ -142,11 +146,11 @@ function createNewModalElement(placeholder = '', inputClass = '', inputType = 't
     contentElement.appendChild(inputElement);
   }
 
-  // Append content element to shadow DOM
-  shadowRoot.appendChild(contentElement);
+  // Append content to the modal container
+  modalElement.appendChild(contentElement);
 
-  // Append modal element to the document body
-  document.body.appendChild(modalElement);
+  // Append the modal container to the shadow root
+  shadowRoot.appendChild(modalElement);
 
   return contentElement;
 }
