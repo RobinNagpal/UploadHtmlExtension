@@ -28,6 +28,7 @@ import { fetch, frameFetch } from "./../../lib/single-file/fetch/content/content
 import * as ui from "./../../ui/content/content-ui.js";
 import { onError, getOpenFileBar, openFile, setLabels } from "./../../ui/common/common-content-ui.js";
 import * as yabson from "./../../lib/yabson/yabson.js";
+import {takeInputsFromUser} from "./dodao-content.js";
 
 const singlefile = globalThis.singlefile;
 const bootstrap = globalThis.singlefileBootstrap;
@@ -193,6 +194,15 @@ async function savePage(message) {
 }
 
 async function processPage(options) {
+	const shouldShowModal = true;
+	if (shouldShowModal) {
+		await takeInputsFromUser(() => {
+			console.log('Callback function called');
+		});
+		return;
+	}
+
+
 	const frames = singlefile.processors.frameTree;
 	let framesSessionId;
 	options.keepFilename = options.saveToGDrive || options.saveToGitHub || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3;
