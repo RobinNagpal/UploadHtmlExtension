@@ -115,9 +115,10 @@ function displayDemos(demos, callbackFunction) {
     document.head.appendChild(styleElement); // Append the styles to the head for global effect
 
     // Create and append the title of the selected demo
-    const demoTitle = document.createElement("h1");
+    const demoTitle = document.createElement("h2");
+    demoTitle.id = "demo-name";
     demoTitle.textContent = selectedDemo
-      ? selectedDemo.title
+      ? `Selected Demo: ${selectedDemo.title}`
       : "No demo selected";
 
     // Create buttons
@@ -323,6 +324,10 @@ function createNewModalElement(
 function createModalStyle() {
   const styleElement = document.createElement("style");
   styleElement.textContent = `
+  .full-screen-modal, .full-screen-modal * {
+      h2:revert;
+      font-family: Arial, sans-serif;
+    }
  .full-screen-modal {
     position: fixed;
     top: 0;
@@ -354,11 +359,11 @@ function createModalStyle() {
     max-height: 80%;
 }
 #demo-list {
-    display: grid; /* Establishes a grid container */
-    grid-template-columns: 1fr 1fr; /* Divides the container into two columns of equal size */
-    gap: 10px; /* Adds space between the grid items */
-    width: 100%; /* Container takes full width of its parent */
-    margin-bottom: 10px; /* Adds some space below the container */
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+    width: 100%; 
+    margin-bottom: 10px; 
 }
 input, button {
     padding: 14px 22px;
@@ -394,19 +399,6 @@ button:hover, button:focus {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     outline: none;
 }
-.demo-list {
-    width: 80%;
-    max-width: 600px;
-    background-color: #333;
-
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: auto; /* Centers the container in the available space */
-    overflow: hidden; /* Prevents children from overflowing */
-}
 
     `;
   return styleElement;
@@ -414,27 +406,30 @@ button:hover, button:focus {
 function createBottomBarStyle() {
   const styleElement = document.createElement("style");
   styleElement.textContent = `
+   #bottom-bar, #bottom-bar * {
+      h2:revert;
+      font-family: Arial, sans-serif;
+    }
     #bottom-bar {
         position: fixed;
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 70px; // Fixed height for visibility
-        background-color: #343a40; // Dark grey background
-        color: #ffffff; // White text for contrast
+        height: 70px; 
+        background-color: #343a40; 
+        color: #ffffff;
         display: flex;
-        justify-content: space-around; // Evenly space out buttons
-        align-items: center; // Vertically center all items in the bar
-        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5); // Subtle shadow for depth
-        z-index: 2147483647; // Ensures it's always on top
-        padding: 0 20px; // Padding on the sides for inner content
+        justify-content: space-around; 
+        align-items: center; 
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+        z-index: 2147483647; 
+        padding: 0 20px; 
     }
-    #bottom-bar h1 {
-        flex-grow: 1; // Allows the title to take up available space
-        margin: 0; // Removes default margin
-        font-size: 20px; // Appropriate size for the bar height
-        text-align: center; // Centers the title horizontally
-        line-height: 70px; // Centers the text vertically by setting line height equal to bar height
+    #bottom-bar #demo-name {
+        flex-grow: 1;
+        padding-left:10px
+        text-align: center; 
+        line-height: 70px; 
     }
         #bottom-bar div{
         margin-right:24px
@@ -444,14 +439,14 @@ function createBottomBarStyle() {
             padding: 10px 20px;
             font-size: 24px;
             border: none;
-            background-color: #007bff; // Bootstrap blue for buttons
+            background-color: #007bff; 
             color: #fff;
             cursor: pointer;
-            border-radius: 5px; // Rounded corners for buttons
-            transition: background-color 0.3s; // Smooth transition for hover effect
+            border-radius: 5px; 
+            transition: background-color 0.3s;
         }
         #bottom-bar button:hover {
-            background-color: #0056b3; // Darker blue on hover
+            background-color: #0056b3; 
         }
             
     `;
