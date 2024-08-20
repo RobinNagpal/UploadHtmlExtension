@@ -154,29 +154,6 @@ function displayDemos(demos, callbackFunction) {
   }
 }
 
-function createContainer() {
-  const container = document.createElement("div");
-  container.style.display = "flex";
-  container.style.flexDirection = "column";
-  container.style.alignItems = "center";
-  container.style.width = "100%";
-  return container;
-}
-
-function createBottomBar() {
-  const bottomBar = document.createElement("div");
-  bottomBar.style.position = "fixed";
-  bottomBar.style.bottom = "0";
-  bottomBar.style.left = "0";
-  bottomBar.style.width = "100%";
-  bottomBar.style.backgroundColor = "#333";
-  bottomBar.style.color = "#fff";
-  bottomBar.style.display = "flex";
-  bottomBar.style.justifyContent = "space-around";
-  bottomBar.style.padding = "10px";
-  return bottomBar;
-}
-
 function showCreateDemoScreen() {
   // Create the modal element
   const createDemoElement = createNewModalElement(
@@ -188,13 +165,18 @@ function showCreateDemoScreen() {
   // Create and append the name input field
   const nameInput = createDemoElement.querySelector(".demo-name-input");
   nameInput.placeholder = "Enter demo name";
+  nameInput.style.width = "90%";
+  nameInput.style.padding = "10px";
+  nameInput.style.marginBottom = "10px";
 
   // Create and append the description input field
-  const descriptionInput = document.createElement("textarea");
+  const descriptionInput = document.createElement("input");
+  descriptionInput.type = "text";
   descriptionInput.placeholder = "Enter demo description";
   descriptionInput.classList.add("demo-description-input");
-  descriptionInput.style.margin = "10px";
   descriptionInput.style.width = "90%";
+  descriptionInput.style.padding = "10px"; // Double the padding to increase height
+  descriptionInput.style.marginBottom = "10px";
   createDemoElement.appendChild(descriptionInput);
 
   // Create and append the submit button
@@ -204,33 +186,31 @@ function showCreateDemoScreen() {
     async () => {
       const name = nameInput.value;
       const description = descriptionInput.value;
-
       if (name && description) {
-        // Handle the creation of the new demo
         await createDemo(name, description);
         removeModalElement(); // Remove the modal after submission
-        // Optionally refresh the demo list or perform other actions
         await refreshDemoList();
       } else {
         alert("Please enter both name and description for the demo.");
       }
     }
   );
-  submitButton.style.width = "50%";
-  createDemoElement.appendChild(submitButton);
+  submitButton.style.width = "calc(50% - 10px)"; // Adjust for margin
+  submitButton.style.padding = "12px 20px";
 
   // Create and append the cancel button
   const cancelButton = createButton("Cancel", "cancel-button", async () => {
     removeModalElement(); // Close the modal
     await showDemoSelection(localStorage.getItem("spaceId")); // Return to demo selection screen
   });
-  createDemoElement.appendChild(cancelButton);
+  cancelButton.style.width = "calc(50% - 10px)"; // Adjust for margin
+  cancelButton.style.padding = "12px 20px";
 
   // Style buttons for proper alignment
   const buttonContainer = document.createElement("div");
   buttonContainer.style.display = "flex";
   buttonContainer.style.justifyContent = "space-between";
-  buttonContainer.style.width = "100%";
+  buttonContainer.style.width = "90%"; // Align with inputs
   buttonContainer.appendChild(submitButton);
   buttonContainer.appendChild(cancelButton);
   createDemoElement.appendChild(buttonContainer);
@@ -453,6 +433,29 @@ function createBottomBarStyle() {
             
     `;
   return styleElement;
+}
+
+function createContainer() {
+  const container = document.createElement("div");
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.alignItems = "center";
+  container.style.width = "100%";
+  return container;
+}
+
+function createBottomBar() {
+  const bottomBar = document.createElement("div");
+  bottomBar.style.position = "fixed";
+  bottomBar.style.bottom = "0";
+  bottomBar.style.left = "0";
+  bottomBar.style.width = "100%";
+  bottomBar.style.backgroundColor = "#333";
+  bottomBar.style.color = "#fff";
+  bottomBar.style.display = "flex";
+  bottomBar.style.justifyContent = "space-around";
+  bottomBar.style.padding = "10px";
+  return bottomBar;
 }
 
 function createButton(text, className, onClick) {
