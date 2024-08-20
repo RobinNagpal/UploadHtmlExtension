@@ -115,15 +115,17 @@ function displayDemos(demos, callbackFunction) {
     document.head.appendChild(styleElement); // Append the styles to the head for global effect
 
     // Create and append the title of the selected demo
-    const demoTitle = document.createElement("h2");
+    const demoTitle = document.createElement("span");
     demoTitle.id = "demo-name";
     demoTitle.textContent = selectedDemo
       ? `Selected Demo: ${selectedDemo.title}`
       : "No demo selected";
 
     // Create buttons
-    const uploadButton = createButton("Upload", "upload-button", () =>
-      console.log("Upload clicked")
+    const uploadButton = createButton(
+      `Upload to ${selectedDemo.title}`,
+      "upload-button",
+      () => console.log("Upload clicked")
     );
     const chooseAnotherButton = createButton(
       "Choose Another Demo",
@@ -406,8 +408,7 @@ button:hover, button:focus {
 function createBottomBarStyle() {
   const styleElement = document.createElement("style");
   styleElement.textContent = `
-   #bottom-bar, #bottom-bar * {
-      h2:revert;
+    #bottom-bar, #bottom-bar * {
       font-family: Arial, sans-serif;
     }
     #bottom-bar {
@@ -415,7 +416,6 @@ function createBottomBarStyle() {
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 70px; 
         background-color: #343a40; 
         color: #ffffff;
         display: flex;
@@ -426,28 +426,30 @@ function createBottomBarStyle() {
         padding: 0 20px; 
     }
     #bottom-bar #demo-name {
+        all:revert;
         flex-grow: 1;
-        padding-left:10px
-        text-align: center; 
+        font-size:24px;
+        font-weight: bold; 
         line-height: 70px; 
     }
-        #bottom-bar div{
+    #bottom-bar div{
         margin-right:24px
-        }
+    }
         
-        #bottom-bar button {
-            padding: 10px 20px;
-            font-size: 24px;
-            border: none;
-            background-color: #007bff; 
-            color: #fff;
-            cursor: pointer;
-            border-radius: 5px; 
-            transition: background-color 0.3s;
-        }
-        #bottom-bar button:hover {
-            background-color: #0056b3; 
-        }
+    #bottom-bar button {
+        all:revert;
+        padding: 10px 20px;
+        font-size: 24px;
+        border: none;
+        background-color: #007bff; 
+        color: #fff;
+        cursor: pointer;
+        border-radius: 5px; 
+        transition: background-color 0.3s;
+    }
+    #bottom-bar button:hover {
+        background-color: #0056b3; 
+    }
             
     `;
   return styleElement;
