@@ -125,7 +125,7 @@ function displayDemos(demos, callbackFunction) {
     const uploadButton = createButton(
       `Upload to ${selectedDemo.title}`,
       "upload-button",
-      () => console.log("Upload clicked")
+      showUploadFileScreen
     );
     const chooseAnotherButton = createButton(
       "Choose Another Demo",
@@ -434,7 +434,6 @@ function createBottomBarStyle() {
     `;
   return styleElement;
 }
-
 function createContainer() {
   const container = document.createElement("div");
   container.style.display = "flex";
@@ -478,5 +477,115 @@ function removeModalElement() {
   const modalWrapper = document.querySelector("#modal-wrapper");
   if (modalWrapper) {
     modalWrapper.remove();
+  }
+}
+function showUploadFileScreen() {
+  // Create the modal element
+  const uploadModalElement = createNewModalElement(
+    "Upload File",
+    "file-name-input",
+    "text" // Type of input for the file name
+  );
+
+  // Create and append the file name input field
+  const nameInput = uploadModalElement.querySelector(".file-name-input");
+  nameInput.placeholder = "Enter file name";
+  nameInput.style.width = "90%";
+  nameInput.style.marginBottom = "10px";
+
+  // Create and append the existing files section
+  const existingFilesContainer = document.createElement("div");
+  existingFilesContainer.id = "existing-files";
+  existingFilesContainer.style.marginBottom = "20px";
+  existingFilesContainer.style.width = "90%";
+  uploadModalElement.appendChild(existingFilesContainer);
+
+  // Load existing files and display them
+  loadExistingFiles(existingFilesContainer);
+
+  // Create and append the submit button
+  const submitButton = createButton(
+    "Upload File",
+    "upload-file-button",
+    async () => {
+      const fileName = nameInput.value;
+      if (fileName) {
+        // Handle the creation of the new file entry
+        await createFile(fileName);
+        removeModalElement(); // Remove the modal after submission
+        await refreshFileList(); // Optionally refresh the file list or perform other actions
+      } else {
+        alert("Please enter a file name.");
+      }
+    }
+  );
+  submitButton.style.width = "calc(50% - 10px)";
+  submitButton.style.padding = "12px 20px";
+
+  // Create and append the cancel button
+  const cancelButton = createButton("Cancel", "cancel-button", async () => {
+    removeModalElement(); // Close the modal
+    await showDemoSelection(localStorage.getItem("spaceId"));
+  });
+  cancelButton.style.width = "calc(50% - 10px)";
+  cancelButton.style.padding = "12px 20px";
+
+  // Style buttons for proper alignment
+  const buttonContainer = document.createElement("div");
+  buttonContainer.style.display = "flex";
+  buttonContainer.style.justifyContent = "space-between";
+  buttonContainer.style.width = "90%";
+  buttonContainer.appendChild(submitButton);
+  buttonContainer.appendChild(cancelButton);
+  uploadModalElement.appendChild(buttonContainer);
+}
+
+async function loadExistingFiles(container) {
+  // Implement logic to fetch and display existing files
+  try {
+    const response = await fetch("https://example.com/api/files");
+    if (!response.ok) {
+      throw new Error("Failed to load existing files: " + response.statusText);
+    }
+
+    const files = await response.json();
+    container.innerHTML = ""; // Clear existing content
+
+    files.forEach((file) => {
+      const fileItem = document.createElement("div");
+      fileItem.textContent = file.name; // Display file name
+      fileItem.style.marginBottom = "5px";
+      container.appendChild(fileItem);
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function createFile(fileName) {
+  // Implement logic to create a new file entry
+  try {
+    // const response = await fetch("https://example.com/api/files", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({ name: fileName }),
+    // });
+    // if (!response.ok) {
+    //   throw new Error("Failed to create file: " + response.statusText);
+    // }
+    console.log("File created successfully.");
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function refreshFileList() {
+  // Optionally refresh the file list
+  // Implement logic to fetch and display the updated file list
+  const existingFilesContainer = document.getElementById("existing-files");
+  if (existingFilesContainer) {
+    // await loadExistingFiles(existingFilesContainer);
   }
 }
