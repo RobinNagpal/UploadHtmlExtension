@@ -40,7 +40,7 @@ async function showDemoSelection(spaceId, callbackFunction) {
 
 async function fetchDemos(spaceId) {
   const response = await fetch(
-    `https://tidbitshub.org/api/clickable-demos?spaceId=${spaceId}`
+    `https://tidbitshub.org/api/clickable-demos?spaceId=test-academy-eth`
   );
   if (!response.ok) {
     console.error("Failed to fetch demos:", response.statusText);
@@ -189,7 +189,8 @@ function showCreateDemoScreen() {
       if (name && description) {
         await createDemo(name, description);
         removeModalElement(); // Remove the modal after submission
-        await refreshDemoList();
+        // await showDemoSelection(localStorage.getItem("spaceId")); // Return to demo selection screen
+        // await refreshDemoList();
       } else {
         alert("Please enter both name and description for the demo.");
       }
@@ -216,23 +217,29 @@ function showCreateDemoScreen() {
   createDemoElement.appendChild(buttonContainer);
 }
 
-async function createDemo(name, description) {
+async function createDemo(demoName, demoDescription) {
   // Implement logic to create the new demo
   // This example assumes an API endpoint for creating a demo
   try {
-    const response = await fetch("https://example.com/api/demos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name, description }),
-    });
+    console.log(JSON.stringify({ demoName, demoDescription }));
+    const response = await fetch(
+      "https://tidbitshub.org/test-academy-eth/api/actions/clickable-demos/create-with-api/",
+      {
+        method: "POST",
+        headers: {
+          "X-API-KEY": localStorage.getItem("spaceId"),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ demoName, demoDescription }),
+      }
+    );
     if (!response.ok) {
       throw new Error("Failed to create demo: " + response.statusText);
     }
     console.log("Demo created successfully.");
   } catch (error) {
     console.error(error);
+    console.log(213124124);
   }
 }
 
