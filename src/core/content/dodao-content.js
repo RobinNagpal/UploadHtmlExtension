@@ -1,10 +1,30 @@
 export async function takeInputsFromUser(callbackFunction) {
   const spaceId = localStorage.getItem("spaceId");
   const apiKey = localStorage.getItem("apiKey");
+  callbackFunction(false);
   if (!spaceId || !apiKey) {
     showLoginScreen(callbackFunction);
   } else {
     await showDemoSelection(spaceId, callbackFunction);
+  }
+}
+export async function createFile(fileName, callbackFunction) {
+  // Implement logic to create a new file entry
+  try {
+    console.log("Creating file:", fileName);
+    // const response = await fetch("https://example.com/api/files", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({ name: fileName }),
+    // });
+    // if (!response.ok) {
+    //   throw new Error("Failed to create file: " + response.statusText);
+    // }
+    console.log("File created successfully.");
+  } catch (error) {
+    console.error(error);
   }
 }
 
@@ -524,6 +544,7 @@ function removeModalElement() {
     modalWrapper.remove();
   }
 }
+
 function showUploadFileScreen() {
   // Create the modal element
   const uploadModalElement = createNewModalElement(
@@ -602,25 +623,6 @@ async function loadExistingFiles(container) {
       fileItem.style.marginBottom = "5px";
       container.appendChild(fileItem);
     });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-async function createFile(fileName) {
-  // Implement logic to create a new file entry
-  try {
-    // const response = await fetch("https://example.com/api/files", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({ name: fileName }),
-    // });
-    // if (!response.ok) {
-    //   throw new Error("Failed to create file: " + response.statusText);
-    // }
-    console.log("File created successfully.");
   } catch (error) {
     console.error(error);
   }
