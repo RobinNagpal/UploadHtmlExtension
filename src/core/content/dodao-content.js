@@ -1,32 +1,42 @@
 export async function takeInputsFromUser(callbackFunction) {
   const spaceId = localStorage.getItem("spaceId");
-  if (!spaceId) {
+  const apiKey = localStorage.getItem("apiKey");
+  if (!spaceId || !apiKey) {
     showLoginScreen(callbackFunction);
   } else {
     await showDemoSelection(spaceId, callbackFunction);
   }
 }
+
 function showLoginScreen(callbackFunction) {
   // Create the modal element
   const loginElement = createNewModalElement(
     "Enter your API key",
     "api-key-input"
   );
+  // Create the input element for Space ID
+  const spaceIdInput = document.createElement("input");
+  spaceIdInput.setAttribute("type", "text");
+  spaceIdInput.placeholder = "Enter your Space ID";
+  spaceIdInput.className = "space-id-input";
+  loginElement.appendChild(spaceIdInput); // Append the Space ID input
+  // Create and append the message element for API key
+  const messageElementAPI = document.createElement("p");
+  messageElementAPI.textContent =
+    "Please enter your API key from the space settings page:";
+  loginElement.appendChild(messageElementAPI); // Append the message for API key
 
-  // Create and append the message element
-  const messageElement = document.createElement("p");
-  messageElement.textContent =
-    "Please enter your API from space settings page:";
-  loginElement.insertBefore(
-    messageElement,
-    loginElement.querySelector(".api-key-input")
-  );
+  // Get the API key input element
+  const apiKeyInput = loginElement.querySelector(".api-key-input");
 
-  // Get the input element and create the submit button
-  const inputElement = loginElement.querySelector(".api-key-input");
+  // Create the submit button
   const submitButton = createButton("Submit", "submit-button", async () => {
-    localStorage.setItem("spaceId", inputElement.value);
-    await showDemoSelection(inputElement.value, callbackFunction);
+    // Store API key and Space ID in localStorage
+    localStorage.setItem("apiKey", apiKeyInput.value);
+    localStorage.setItem("spaceId", spaceIdInput.value);
+
+    // Proceed to show the demo selection
+    await showDemoSelection(spaceIdInput.value, callbackFunction);
   });
 
   // Append the submit button to the modal element
@@ -40,7 +50,7 @@ async function showDemoSelection(spaceId, callbackFunction) {
 
 async function fetchDemos(spaceId) {
   const response = await fetch(
-    `https://tidbitshub.org/api/clickable-demos?spaceId=test-academy-eth`
+    `http://localhost:3000/api/clickable-demos?spaceId=${spaceId}`
   );
   if (!response.ok) {
     console.error("Failed to fetch demos:", response.statusText);
@@ -51,7 +61,6 @@ async function fetchDemos(spaceId) {
 
 function displayDemos(demos, callbackFunction) {
   const selectedDemoId = localStorage.getItem("selectedDemoId");
-
   if (!selectedDemoId) {
     // Create the full screen modal if no demo is selected
     const demoModalContent = createNewModalElement();
@@ -91,6 +100,34 @@ function displayDemos(demos, callbackFunction) {
     container.appendChild(demoListMessage);
     container.appendChild(demoList);
     demoModalContent.appendChild(container);
+
+    // Create a new bottom bar
+    const bottomBar = createBottomBar();
+    bottomBar.id = "bottom-bar"; // Assign an ID for easy reference and removal
+    bottomBar.style.display = "block";
+    // Create and append style for the bottom bar
+    const styleElement = createBottomBarStyle();
+    document.head.appendChild(styleElement); // Append the styles to the head for global effect
+
+    // Create the logout button
+    const logoutButton = createButton("Logout", "logout-button", async () => {
+      localStorage.clear(); // Clear all local storage items
+      removeModalElement(); // Close the modal
+      await showLoginScreen(); // Navigate back to the login screen
+    });
+    logoutButton.style.margin = "10px"; // Pushes all other elements to the right
+    logoutButton.style.width = "10%";
+    logoutButton.style.position = "relative";
+    logoutButton.style.left = "0px";
+    bottomBar.appendChild(logoutButton);
+    const dodao_full_screen_modal_wrapper = document.querySelector(
+      "#dodao-full-screen-modal-wrapper"
+    );
+    const fullScreenModal =
+      dodao_full_screen_modal_wrapper.shadowRoot.querySelector(
+        ".full-screen-modal"
+      );
+    fullScreenModal.appendChild(bottomBar);
   } else {
     let selectedDemo = demos.find((demo) => demo.id === selectedDemoId);
 
@@ -114,6 +151,14 @@ function displayDemos(demos, callbackFunction) {
     const styleElement = createBottomBarStyle();
     document.head.appendChild(styleElement); // Append the styles to the head for global effect
 
+    // Create the logout button
+    const logoutButton = createButton("Logout", "logout-button", async () => {
+      localStorage.clear(); // Clear all local storage items
+      removeModalElement(); // Close the modal
+      await showLoginScreen(); // Navigate back to the login screen
+    });
+    logoutButton.style.margin = "10px"; // Pushes all other elements to the right
+    logoutButton.style.width = "10%";
     // Create and append the title of the selected demo
     const demoTitle = document.createElement("span");
     demoTitle.id = "demo-name";
@@ -145,7 +190,8 @@ function displayDemos(demos, callbackFunction) {
     buttonContainer.appendChild(uploadButton);
     buttonContainer.appendChild(chooseAnotherButton);
 
-    // Append title and button container to the bottom bar
+    // Append logout button, title, and button container to the bottom bar
+    bottomBar.appendChild(logoutButton); // This places the logout button at the extreme left
     bottomBar.appendChild(demoTitle);
     bottomBar.appendChild(buttonContainer);
 
@@ -189,8 +235,7 @@ function showCreateDemoScreen() {
       if (name && description) {
         await createDemo(name, description);
         removeModalElement(); // Remove the modal after submission
-        // await showDemoSelection(localStorage.getItem("spaceId")); // Return to demo selection screen
-        // await refreshDemoList();
+        await showDemoSelection(localStorage.getItem("spaceId")); // Return to demo selection screen
       } else {
         alert("Please enter both name and description for the demo.");
       }
@@ -220,14 +265,17 @@ function showCreateDemoScreen() {
 async function createDemo(demoName, demoDescription) {
   // Implement logic to create the new demo
   // This example assumes an API endpoint for creating a demo
+  const spaceId = localStorage.getItem("spaceId");
+  const apiKey = localStorage.getItem("apiKey");
+  const submitButton = document.querySelector(".create-demo-button");
   try {
     console.log(JSON.stringify({ demoName, demoDescription }));
     const response = await fetch(
-      "https://tidbitshub.org/test-academy-eth/api/actions/clickable-demos/create-with-api/",
+      `http://localhost:3000/api/${spaceId}/actions/clickable-demos/create-with-api`,
       {
         method: "POST",
         headers: {
-          "X-API-KEY": localStorage.getItem("spaceId"),
+          "X-API-KEY": apiKey,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ demoName, demoDescription }),
@@ -240,15 +288,6 @@ async function createDemo(demoName, demoDescription) {
   } catch (error) {
     console.error(error);
     console.log(213124124);
-  }
-}
-
-async function refreshDemoList() {
-  // Optionally refresh the demo list
-  const spaceId = localStorage.getItem("spaceId");
-  if (spaceId) {
-    const demos = await fetchDemos(spaceId);
-    displayDemos(demos, showDemoSelection);
   }
 }
 
@@ -270,7 +309,6 @@ function createNewModalElement(
     "#dodao-full-screen-modal-wrapper"
   );
   if (fullScreenModalWrapper) {
-    console.log(123234);
     fullScreenModalWrapper.remove();
   }
 
