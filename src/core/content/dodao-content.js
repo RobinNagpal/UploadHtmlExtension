@@ -3,7 +3,6 @@ let blob;
 export async function takeInputsFromUser(callbackFunction) {
   const spaceId = localStorage.getItem("spaceId");
   const apiKey = localStorage.getItem("apiKey");
-  callbackFunction(false);
   if (!spaceId || !apiKey) {
     showLoginScreen(callbackFunction);
   } else {
@@ -575,6 +574,8 @@ function showUploadFileScreen() {
         //we convert blob to file using user input file name
         file = new File([blob], fileName, { type: "text/html" });
         console.log(file);
+        const fielUrl = URL.createObjectURL(file);
+        window.open(fielUrl);
         removeModalElement(); // Remove the modal after submission
         await refreshFileList(); // Optionally refresh the file list or perform other actions
       } else {
