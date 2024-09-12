@@ -1,3 +1,5 @@
+let file;
+let blob;
 export async function takeInputsFromUser(callbackFunction) {
   const spaceId = localStorage.getItem("spaceId");
   const apiKey = localStorage.getItem("apiKey");
@@ -8,21 +10,13 @@ export async function takeInputsFromUser(callbackFunction) {
     await showDemoSelection(spaceId, callbackFunction);
   }
 }
-export async function createFile(fileName, callbackFunction) {
+export async function getBlob(fileName, callbackFunction) {
   // Implement logic to create a new file entry
   try {
-    console.log("Creating file:", fileName);
-    // const response = await fetch("https://example.com/api/files", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({ name: fileName }),
-    // });
-    // if (!response.ok) {
-    //   throw new Error("Failed to create file: " + response.statusText);
-    // }
-    console.log("File created successfully.");
+    console.log("Creating blob:", fileName);
+    //we get the blob from the callback function
+    blob = callbackFunction(fileName);
+    console.log("Blob accessed successfully.");
   } catch (error) {
     console.error(error);
   }
@@ -149,6 +143,7 @@ function displayDemos(demos, callbackFunction) {
       );
     fullScreenModal.appendChild(bottomBar);
   } else {
+    console.log(file);
     let selectedDemo = demos.find((demo) => demo.id === selectedDemoId);
 
     // Remove any existing bottom bar first
@@ -567,7 +562,7 @@ function showUploadFileScreen() {
   uploadModalElement.appendChild(existingFilesContainer);
 
   // Load existing files and display them
-  loadExistingFiles(existingFilesContainer);
+  // loadExistingFiles(existingFilesContainer);
 
   // Create and append the submit button
   const submitButton = createButton(
@@ -577,7 +572,9 @@ function showUploadFileScreen() {
       const fileName = nameInput.value;
       if (fileName) {
         // Handle the creation of the new file entry
-        await createFile(fileName);
+        //we convert blob to file using user input file name
+        file = new File([blob], fileName, { type: "text/html" });
+        console.log(file);
         removeModalElement(); // Remove the modal after submission
         await refreshFileList(); // Optionally refresh the file list or perform other actions
       } else {

@@ -25,7 +25,7 @@
 
 import * as yabson from "./../../lib/yabson/yabson.js";
 import * as ui from "./../../ui/content/content-ui.js";
-import { createFile } from "../content/dodao-content.js";
+import { getBlob } from "../content/dodao-content.js";
 import {
   getSharePageBar,
   setLabels,
@@ -182,7 +182,6 @@ async function downloadPage(pageData, options) {
       browser.runtime.sendMessage({ method: "ui.processCancelled" });
     }
   } else {
-    console.log("options.compressContent else");
     if (
       (options.backgroundSave && !options.sharePage) ||
       options.openEditor ||
@@ -194,7 +193,6 @@ async function downloadPage(pageData, options) {
       options.saveToRestFormApi ||
       options.saveToS3
     ) {
-      console.log("options1224");
       let filename = pageData.filename;
       if (
         (options.saveToGDrive ||
@@ -207,35 +205,19 @@ async function downloadPage(pageData, options) {
         options.confirmFilename &&
         !options.openEditor
       ) {
-        console.log("options1225");
         filename = ui.prompt("Save as", pageData.filename);
       }
       if (filename) {
-        console.log("filename:", filename);
-        await createFile(filename);
         message.filename = pageData.filename = filename;
-        // const blobURL = URL.createObjectURL(
-        //   new Blob([pageData.content], { type: pageData.mimeType })
-        // );
         const blob = new Blob([pageData.content], { type: pageData.mimeType });
-        const file = new File([blob], filename, { type: "text/html" });
-        const fileURL = URL.createObjectURL(file);
-        window.open(fileURL, "_blank");
-
-        console.log("file:", file);
-        console.log("blob:", blob);
+        //use get Blob and call the callback function to get the blob in dodao-content.js
+        await getBlob(filename, () => {
+          blob.filename = filename;
+          return blob;
+        });
         const blobURL = URL.createObjectURL(blob);
-        console.log("blobURL:", blobURL);
         message.blobURL = blobURL;
-        const iframe = document.createElement("iframe");
-
-        // Set attributes for the iframe
-        iframe.src = blobURL; // Setting the source to the Blob URL
-        iframe.style.width = "100%"; // Example: full width of the container
-        iframe.style.height = "500px"; // Example: 500 pixels high
-        document.body.appendChild(iframe);
         // const result = await browser.runtime.sendMessage(message);
-        // Append the iframe to the document, e.g., inside a specific div or directly to body
         URL.revokeObjectURL(blobURL);
         // if (result.error) {
         //   message.blobURL = null;
