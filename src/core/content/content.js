@@ -98,7 +98,9 @@ async function onMessage(message) {
 				// in message.options
 				//
 
-				await savePage({...message, simulationOptions, saveWithTidbitsHub: true});
+				console.log("simulationOptions", simulationOptions);
+
+				await savePage({ ...message, options: { ...message.options, ...simulationOptions, saveWithTidbitsHub: true}});
 			});
 			return {};
 		}
@@ -180,7 +182,6 @@ async function savePage(message) {
 		browser.runtime.sendMessage({ method: "ping" }).then(() => { });
 	}, 15000);
 	const options = message.options;
-	const saveWithTidbitsHub = message.saveWithTidbitsHub;
 	let selectionFound;
 	if (options.selected || options.optionallySelected) {
 		selectionFound = await ui.markSelection(options.optionallySelected);
@@ -200,7 +201,7 @@ async function savePage(message) {
 			try {
 				const pageData = await processPage(options);
 				if (pageData) {
-					await download.downloadPage(pageData, {...options ,saveWithTidbitsHub});
+					await download.downloadPage(pageData, options);
 				}
 			} catch (error) {
 				if (!processor.cancelled) {
@@ -224,7 +225,7 @@ async function savePage(message) {
 async function processPage(options) {
 	const frames = singlefile.processors.frameTree;
 	let framesSessionId;
-	options.keepFilename = options.saveToGDrive || options.saveToGitHub || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3;
+	options.keepFilename = options.saveToGDrive || options.saveToGitHub || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3 || options.saveWithTidbitsHub;
 	singlefile.helper.initDoc(document);
 	ui.onStartPage(options);
 	processor = new singlefile.SingleFile(options);
