@@ -242,6 +242,8 @@ async function downloadContent(message, tab) {
 					filenameConflictAction: message.filenameConflictAction,
 					prompt
 				});
+			} else if(message.saveWithTidbitsHub){
+				console.log('Upload to tidbits hub');
 			} else {
 				response = await downloadPage(message, {
 					confirmFilename: message.confirmFilename,

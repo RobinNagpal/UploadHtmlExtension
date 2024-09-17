@@ -158,51 +158,33 @@ async function downloadPage(pageData, options) {
 			browser.runtime.sendMessage({ method: "ui.processCancelled" });
 		}
 	} else {
-		
 		if ((options.backgroundSave && !options.sharePage) || options.openEditor || options.saveToGDrive || options.saveToGitHub || options.saveWithCompanion || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3) {
 			let filename = pageData.filename;
-			console.log(message)
 			if ((options.saveToGDrive || options.saveToGitHub || options.saveWithCompanion || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3) && options.confirmFilename && !options.openEditor) {
 				filename = ui.prompt("Save as", pageData.filename);
 			}
 			if (filename) {
-				if (message.saveWithTidbitsHub) {
-					// upload logic
-					console.log(23132)
-				}
 				message.filename = pageData.filename = filename;
-        const blob = new Blob([pageData.content], { type: pageData.mimeType });
-        //use get Blob and call the callback function to get the blob in dodao-content.js
-        // await getBlob(filename, () => {
-        //   blob.filename = filename;
-        //   return blob;
-        // });
-        const blobURL = URL.createObjectURL(blob);
-        message.blobURL = blobURL;
-        // const result = await browser.runtime.sendMessage(message);
-        URL.revokeObjectURL(blobURL);
-        // if (result.error) {
-        //   message.blobURL = null;
-        //   for (
-        //     let blockIndex = 0;
-        //     blockIndex * MAX_CONTENT_SIZE < pageData.content.length;
-        //     blockIndex++
-        //   ) {
-        //     message.truncated = pageData.content.length > MAX_CONTENT_SIZE;
-        //     if (message.truncated) {
-        //       message.finished =
-        //         (blockIndex + 1) * MAX_CONTENT_SIZE > pageData.content.length;
-        //       message.content = pageData.content.substring(
-        //         blockIndex * MAX_CONTENT_SIZE,
-        //         (blockIndex + 1) * MAX_CONTENT_SIZE
-        //       );
-        //     } else {
-        //       message.content = pageData.content;
-        //     }
-        //     await browser.runtime.sendMessage(message);
-        //   }
-        // }
-      }  else {
+				const blobURL = URL.createObjectURL(new Blob([pageData.content], { type: pageData.mimeType }));
+				message.blobURL = blobURL;
+				console.log('message', message);
+				const result = await browser.runtime.sendMessage(message);
+				URL.revokeObjectURL(blobURL);
+				if (result.error) {
+					message.blobURL = null;
+					for (let blockIndex = 0; blockIndex * MAX_CONTENT_SIZE < pageData.content.length; blockIndex++) {
+						message.truncated = pageData.content.length > MAX_CONTENT_SIZE;
+						if (message.truncated) {
+							message.finished = (blockIndex + 1) * MAX_CONTENT_SIZE > pageData.content.length;
+							message.content = pageData.content.substring(blockIndex * MAX_CONTENT_SIZE, (blockIndex + 1) * MAX_CONTENT_SIZE);
+						} else {
+							message.content = pageData.content;
+						}
+
+						await browser.runtime.sendMessage(message);
+					}
+				}
+			} else {
 				browser.runtime.sendMessage({ method: "downloads.cancel" });
 				browser.runtime.sendMessage({ method: "ui.processCancelled" });
 			}
