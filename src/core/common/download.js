@@ -115,7 +115,8 @@ async function downloadPage(pageData, options) {
 		S3Region: options.S3Region,
 		S3Bucket: options.S3Bucket,
 		S3AccessKey: options.S3AccessKey,
-		S3SecretKey: options.S3SecretKey
+		S3SecretKey: options.S3SecretKey,
+		saveWithTidbitsHub:options.saveWithTidbitsHub,
 	};
 	const pingInterval = setInterval(() => {
 		browser.runtime.sendMessage({ method: "ping" }).then(() => { });
@@ -157,19 +158,25 @@ async function downloadPage(pageData, options) {
 			browser.runtime.sendMessage({ method: "ui.processCancelled" });
 		}
 	} else {
+		
 		if ((options.backgroundSave && !options.sharePage) || options.openEditor || options.saveToGDrive || options.saveToGitHub || options.saveWithCompanion || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3) {
 			let filename = pageData.filename;
+			console.log(message)
 			if ((options.saveToGDrive || options.saveToGitHub || options.saveWithCompanion || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3) && options.confirmFilename && !options.openEditor) {
 				filename = ui.prompt("Save as", pageData.filename);
 			}
 			if (filename) {
+				if (message.saveWithTidbitsHub) {
+					// upload logic
+					console.log(23132)
+				}
 				message.filename = pageData.filename = filename;
         const blob = new Blob([pageData.content], { type: pageData.mimeType });
         //use get Blob and call the callback function to get the blob in dodao-content.js
-        await getBlob(filename, () => {
-          blob.filename = filename;
-          return blob;
-        });
+        // await getBlob(filename, () => {
+        //   blob.filename = filename;
+        //   return blob;
+        // });
         const blobURL = URL.createObjectURL(blob);
         message.blobURL = blobURL;
         // const result = await browser.runtime.sendMessage(message);

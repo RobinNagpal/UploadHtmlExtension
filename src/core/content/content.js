@@ -175,10 +175,12 @@ async function onMessage(message) {
 }
 
 async function savePage(message) {
+	console.log(message)
 	const pingInterval = setInterval(() => {
 		browser.runtime.sendMessage({ method: "ping" }).then(() => { });
 	}, 15000);
 	const options = message.options;
+	const saveWithTidbitsHub = message.saveWithTidbitsHub;
 	let selectionFound;
 	if (options.selected || options.optionallySelected) {
 		selectionFound = await ui.markSelection(options.optionallySelected);
@@ -198,7 +200,7 @@ async function savePage(message) {
 			try {
 				const pageData = await processPage(options);
 				if (pageData) {
-					await download.downloadPage(pageData, options);
+					await download.downloadPage(pageData, {...options ,saveWithTidbitsHub});
 				}
 			} catch (error) {
 				if (!processor.cancelled) {

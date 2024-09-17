@@ -15,6 +15,9 @@ export async function getBlob(fileName, callbackFunction) {
     console.log("Creating blob:", fileName);
     //we get the blob from the callback function
     blob = callbackFunction(fileName);
+    const file = new File([blob], fileName, { type: "text/html" });
+    const fileUrl = URL.createObjectURL(file);
+    window.open(fileUrl, "_blank");
     console.log("Blob accessed successfully.");
   } catch (error) {
     console.error(error);
@@ -180,10 +183,11 @@ function displayDemos(demos, callbackFunction) {
       : "No demo selected";
 
     // Create buttons
-    const uploadButton = createButton(
-      `Upload to ${selectedDemo.title}`,
-      "upload-button",
-      showUploadFileScreen
+    const saveButton = createButton(
+      `Save to ${selectedDemo.title}`,
+      "save-button", () => {
+        showSaveFileScreen(selectedDemo, callbackFunction)
+      }
     );
     const chooseAnotherButton = createButton(
       "Choose Another Demo",
@@ -200,7 +204,7 @@ function displayDemos(demos, callbackFunction) {
     buttonContainer.style.gap = "10px"; // Space between buttons
 
     // Append buttons to their container
-    buttonContainer.appendChild(uploadButton);
+    buttonContainer.appendChild(saveButton);
     buttonContainer.appendChild(chooseAnotherButton);
 
     // Append logout button, title, and button container to the bottom bar
@@ -485,6 +489,20 @@ function createBottomBarStyle() {
         border-radius: 5px; 
         transition: background-color 0.3s;
     }
+    #bottom-bar button.save-button {
+        all:revert;
+        padding: 10px 20px;
+        font-size: 24px;
+        border: none;
+        background-color: #32CD32;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 5px; 
+        transition: background-color 0.3s;
+    }
+     #bottom-bar button.save-button:hover {
+     background-color: #228B22;
+     }
     #bottom-bar button:hover {
         background-color: #0056b3; 
     }
@@ -523,13 +541,6 @@ function createButton(text, className, onClick) {
   return button;
 }
 
-function uploadFilePrompt(demo, callbackFunction) {
-  const fileName = prompt("Enter the name of the file to upload:");
-  if (fileName) {
-    console.log("Uploading", fileName, "to demo", demo.name);
-    callbackFunction();
-  }
-}
 
 function removeModalElement() {
   const modalWrapper = document.querySelector("#modal-wrapper");
@@ -538,10 +549,10 @@ function removeModalElement() {
   }
 }
 
-function showUploadFileScreen() {
+function showSaveFileScreen(demo,callbackFunction) {
   // Create the modal element
   const uploadModalElement = createNewModalElement(
-    "Upload File",
+    "Save File",
     "file-name-input",
     "text" // Type of input for the file name
   );
@@ -564,111 +575,128 @@ function showUploadFileScreen() {
 
   // Create and append the submit button
   const submitButton = createButton(
-    "Upload File",
-    "upload-file-button",
+    "Save File",
+    "save-file-button",
     async () => {
-      const fileName = nameInput.value;
-      if (fileName) {
-        // Convert blob to file using user input for file name
-        const file = new File([blob], fileName, { type: "text/html" });
-        console.log(file);
-        removeModalElement(); // Remove the modal after submission
-
-        // Create a FileReader to read the file's contents
-        const reader = new FileReader();
-
-        // Promise to handle reading the file asynchronously
-        const readPromise = new Promise((resolve, reject) => {
-          // When the read is complete, resolve the promise with the file content
-          reader.onload = () => resolve(reader.result);
-          // If there's an error, reject the promise
-          reader.onerror = () => reject(reader.error);
-        });
-
-        // Start reading the file as text
-        reader.readAsText(file);
-
-        try {
-          // Wait for the file to be read and store the result in htmlContent
-          const htmlContent = await readPromise;
-          // // Manipulate the HTML
-          const modifiedHtml = injectScriptLinkTags(htmlContent);
-
-          const blob = new Blob([modifiedHtml], { type: "text/html" });
-          const editedFile = new File([blob], file.name, {
-            type: "text/html",
-          });
-
-          // window.open(fileUrl, "_blank");
-          try {
-            const input = {
-              imageType: `ClickableDemos/${localStorage.getItem(
-                "selectedDemoId"
-              )}`,
-              contentType: file.type,
-              objectId: "the_test_academy",
-              name: file.name,
-            };
-
-            console.log(input);
-            const spaceId = localStorage.getItem("spaceId");
-
-            const data = await fetch(
-              "http://localhost:3000/api/s3-signed-urls",
-              {
-                method: "POST",
-                headers: {
-                  "X-API-KEY": localStorage.getItem("apiKey"),
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ spaceId, input }),
-              }
-            )
-              .then((response) => {
-                if (!response.ok) {
-                  throw new Error("Network response was not ok");
-                }
-                return response.json(); // Parse JSON from the response
-              })
-              .then((data) => {
-                console.log(data.url);
-                return data; // Access the 'url' property from the JSON object
-              })
-              .catch((error) => {
-                console.error(
-                  "There has been a problem with your fetch operation:",
-                  error
-                );
-              });
-
-            const signedUrl = data.url;
-            console.log(signedUrl);
-            await fetch(signedUrl, {
-              method: "PUT", // Specify the method
-              headers: {
-                "Content-Type": file.type, // Set the content type header
-              },
-              body: editedFile, // Set the body of the request to the file you are uploading
-            });
-            const fileUrl = getUploadedImageUrlFromSingedUrl(signedUrl);
-
-            console.log(fileUrl);
-          } catch (error) {
-            console.error("Error uploading file:", error);
-            alert("Failed to upload the file.");
-          }
-          console.log("HTML Content of the file:", htmlContent);
-        } catch (error) {
-          console.error("Error reading file:", error);
-          alert("Failed to read the file.");
-        }
-
-        // Optionally refresh the file list or perform other actions
-        await refreshFileList();
-      } else {
-        alert("Please enter a file name.");
-      }
+     const simulationOptions= {
+        fileName : nameInput.value,
+        objectId : demo.title.replace(/\s+/g, '-')
+     }
+     let fullScreenModalWrapper = document.querySelector(
+      "#dodao-full-screen-modal-wrapper"
+     );
+     let bottomBar = document.querySelector(
+      "#bottom-bar"
+     );
+     if (fullScreenModalWrapper && bottomBar) {
+       fullScreenModalWrapper.remove();
+       bottomBar.remove();
     }
+      await callbackFunction(simulationOptions);
+
+    }
+    //   const fileName = nameInput.value;
+    //   if (fileName) {
+    //     // Convert blob to file using user input for file name
+    //     const file = new File([blob], fileName, { type: "text/html" });
+    //     console.log(file);
+    //     removeModalElement(); // Remove the modal after submission
+
+    //     // Create a FileReader to read the file's contents
+    //     const reader = new FileReader();
+
+    //     // Promise to handle reading the file asynchronously
+    //     const readPromise = new Promise((resolve, reject) => {
+    //       // When the read is complete, resolve the promise with the file content
+    //       reader.onload = () => resolve(reader.result);
+    //       // If there's an error, reject the promise
+    //       reader.onerror = () => reject(reader.error);
+    //     });
+
+    //     // Start reading the file as text
+    //     reader.readAsText(file);
+
+    //     try {
+    //       // Wait for the file to be read and store the result in htmlContent
+    //       const htmlContent = await readPromise;
+    //       // // Manipulate the HTML
+    //       const modifiedHtml = injectScriptLinkTags(htmlContent);
+
+    //       const blob = new Blob([modifiedHtml], { type: "text/html" });
+    //       const editedFile = new File([blob], file.name, {
+    //         type: "text/html",
+    //       });
+
+    //       // window.open(fileUrl, "_blank");
+    //       try {
+    //         const input = {
+    //           imageType: `ClickableDemos/${localStorage.getItem(
+    //             "selectedDemoId"
+    //           )}`,
+    //           contentType: file.type,
+    //           objectId: "the_test_academy",
+    //           name: file.name,
+    //         };
+
+    //         console.log(input);
+    //         const spaceId = localStorage.getItem("spaceId");
+
+    //         const data = await fetch(
+    //           "http://localhost:3000/api/s3-signed-urls",
+    //           {
+    //             method: "POST",
+    //             headers: {
+    //               "X-API-KEY": localStorage.getItem("apiKey"),
+    //               "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({ spaceId, input }),
+    //           }
+    //         )
+    //           .then((response) => {
+    //             if (!response.ok) {
+    //               throw new Error("Network response was not ok");
+    //             }
+    //             return response.json(); // Parse JSON from the response
+    //           })
+    //           .then((data) => {
+    //             console.log(data.url);
+    //             return data; // Access the 'url' property from the JSON object
+    //           })
+    //           .catch((error) => {
+    //             console.error(
+    //               "There has been a problem with your fetch operation:",
+    //               error
+    //             );
+    //           });
+
+    //         const signedUrl = data.url;
+    //         console.log(signedUrl);
+    //         await fetch(signedUrl, {
+    //           method: "PUT", // Specify the method
+    //           headers: {
+    //             "Content-Type": file.type, // Set the content type header
+    //           },
+    //           body: editedFile, // Set the body of the request to the file you are uploading
+    //         });
+    //         const fileUrl = getUploadedImageUrlFromSingedUrl(signedUrl);
+
+    //         console.log(fileUrl);
+    //       } catch (error) {
+    //         console.error("Error uploading file:", error);
+    //         alert("Failed to upload the file.");
+    //       }
+    //       console.log("HTML Content of the file:", htmlContent);
+    //     } catch (error) {
+    //       console.error("Error reading file:", error);
+    //       alert("Failed to read the file.");
+    //     }
+
+    //     // Optionally refresh the file list or perform other actions
+    //     await refreshFileList();
+    //   } else {
+    //     alert("Please enter a file name.");
+    //   }
+    // }
   );
   submitButton.style.width = "calc(50% - 10px)";
   submitButton.style.padding = "12px 20px";
