@@ -46,6 +46,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
 		return tabs.onMessage(message, sender);
 	}
 	if (message.method.startsWith("downloads.")) {
+		chrome.storage.local.set({ spaceId: message.spaceId,apiKey: message.apiKey })
 		return downloads.onMessage(message, sender);
 	}
 	if (message.method.startsWith("autosave.")) {

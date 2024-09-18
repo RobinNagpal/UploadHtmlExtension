@@ -93,7 +93,7 @@ function displayDemos(demos, callbackFunction) {
     demoList.style.width = "100%";
     demos.forEach((demo) => {
       const demoItem = createButton(demo.title, "demo-item", () =>
-        selectDemo(demo, callbackFunction, demoModalContent)
+        selectDemo(demo,callbackFunction)
       );
       demoList.appendChild(demoItem);
     });
@@ -110,7 +110,9 @@ function displayDemos(demos, callbackFunction) {
     const createDemoButton = createButton(
       "Create a Demo",
       "create-demo-button",
-      showCreateDemoScreen
+      () => {
+        showCreateDemoScreen(callbackFunction);
+      }
     );
     container.appendChild(createDemoButton);
     container.appendChild(demoListMessage);
@@ -217,7 +219,7 @@ function displayDemos(demos, callbackFunction) {
   }
 }
 
-function showCreateDemoScreen() {
+function showCreateDemoScreen(callbackFunction) {
   // Create the modal element
   const createDemoElement = createNewModalElement(
     "Enter demo details",
@@ -252,7 +254,7 @@ function showCreateDemoScreen() {
       if (name && description) {
         await createDemo(name, description);
         removeModalElement(); // Remove the modal after submission
-        await showDemoSelection(localStorage.getItem("spaceId")); // Return to demo selection screen
+        await showDemoSelection(localStorage.getItem("spaceId"),callbackFunction); // Return to demo selection screen
       } else {
         alert("Please enter both name and description for the demo.");
       }
@@ -264,7 +266,7 @@ function showCreateDemoScreen() {
   // Create and append the cancel button
   const cancelButton = createButton("Cancel", "cancel-button", async () => {
     removeModalElement(); // Close the modal
-    await showDemoSelection(localStorage.getItem("spaceId")); // Return to demo selection screen
+    await showDemoSelection(localStorage.getItem("spaceId"),callbackFunction); // Return to demo selection screen
   });
   cancelButton.style.width = "calc(50% - 10px)"; // Adjust for margin
   cancelButton.style.padding = "12px 20px";
@@ -308,11 +310,11 @@ async function createDemo(demoName, demoDescription) {
   }
 }
 
-async function selectDemo(demo) {
+async function selectDemo(demo,callbackFunction) {
   // Store the selected demo ID in localStorage
   localStorage.setItem("selectedDemoId", demo.id);
   removeModalElement();
-  await showDemoSelection(localStorage.getItem("spaceId"));
+  await showDemoSelection(localStorage.getItem("spaceId"),callbackFunction);
   // document.querySelector("#demo-list").style.display = "none";
 }
 
@@ -704,7 +706,7 @@ function showSaveFileScreen(demo,callbackFunction) {
   // Create and append the cancel button
   const cancelButton = createButton("Cancel", "cancel-button", async () => {
     removeModalElement(); // Close the modal
-    await showDemoSelection(localStorage.getItem("spaceId"));
+    await showDemoSelection(localStorage.getItem("spaceId"),callbackFunction);
   });
   cancelButton.style.width = "calc(50% - 10px)";
   cancelButton.style.padding = "12px 20px";

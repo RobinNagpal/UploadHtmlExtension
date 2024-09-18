@@ -40,7 +40,7 @@ import { download } from "./download-util.js";
 import * as yabson from "./../../lib/yabson/yabson.js";
 import { RestFormApi } from "../../lib/../lib/rest-form-api/index.js";
 import * as offscreen from "./offscreen.js";
-
+import { uploadFileToDodao } from "./dodao-upload.js";
 const partialContents = new Map();
 const tabData = new Map();
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
@@ -243,7 +243,10 @@ async function downloadContent(message, tab) {
 					prompt
 				});
 			} else if(message.saveWithTidbitsHub){
-				console.log('Upload to tidbits hub');
+				const blob = new Blob([message.content], { type: message.mimeType });
+				uploadFileToDodao(message.simulationOptions, blob, () => {
+					console.log('callBackFunction Called');
+				});
 			} else {
 				response = await downloadPage(message, {
 					confirmFilename: message.confirmFilename,
