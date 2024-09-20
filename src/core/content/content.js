@@ -51,6 +51,7 @@ setLabels({
 if (!bootstrap || !bootstrap.initializedSingleFile) {
 	singlefile.init({ fetch, frameFetch });
 	browser.runtime.onMessage.addListener(message => {
+		console.log("message.method", message);
 		if (message.method == "content.save" ||
 			message.method == "content.cancelSave" ||
 			message.method == "content.download" ||
@@ -59,7 +60,9 @@ if (!bootstrap || !bootstrap.initializedSingleFile) {
 			message.method == "content.prompt" ||
 			message.method == "content.beginScrollTo" ||
 			message.method == "content.scrollTo" ||
-			message.method == "content.endScrollTo") {
+			message.method == "content.endScrollTo" ||
+			message.error ||
+			message.success) {
 			return onMessage(message);
 		}
 	});
@@ -72,6 +75,14 @@ if (!bootstrap || !bootstrap.initializedSingleFile) {
 
 async function onMessage(message) {
 	if (!location.href.startsWith(MOZ_EXTENSION_PROTOCOL)) {
+		if (message.error) {
+			console.log(message)
+			alert("Failed to upload. Please try again later.")
+		}
+		if (message.success) {
+			console.log(message)
+			alert("File uploaded successfully.")
+			}
 		if (message.method == "content.save") {
 			await takeInputsFromUser(async (simulationOptions) => {
 				// TODO - make sure callback is called after the save and clicked and the user adds the name of the file

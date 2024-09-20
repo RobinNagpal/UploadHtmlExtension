@@ -26,7 +26,6 @@
 import * as yabson from "./../../lib/yabson/yabson.js";
 import * as ui from "./../../ui/content/content-ui.js";
 import { getSharePageBar, setLabels } from "./../../ui/common/common-content-ui.js";
-import { getBlob } from "../content/dodao-content.js";
 
 const MAX_CONTENT_SIZE = 16 * (1024 * 1024);
 
