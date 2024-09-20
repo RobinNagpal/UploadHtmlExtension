@@ -7,21 +7,23 @@ export async function takeInputsFromUser(callbackFunction) {
     await showDemoSelection(spaceId, callbackFunction);
   }
 }
+
 function showLoginScreen(callbackFunction) {
   const loginElement = createNewModalElement(
     "Enter your API key",
     "api-key-input"
   );
 
-  const spaceIdInput = document.createElement("input");
-  spaceIdInput.setAttribute("type", "text");
-  spaceIdInput.placeholder = "Enter your Space ID";
-  spaceIdInput.className = "space-id-input";
+  const spaceIdInput = createInputElement(
+    "text",
+    "Enter your Space ID",
+    "space-id-input"
+  );
   loginElement.appendChild(spaceIdInput);
 
-  const messageElementAPI = document.createElement("p");
-  messageElementAPI.textContent =
-    "Please enter your API key from the space settings page:";
+  const messageElementAPI = createMessageElement(
+    "Please enter your API key from the space settings page:"
+  );
   loginElement.appendChild(messageElementAPI);
 
   const apiKeyInput = loginElement.querySelector(".api-key-input");
@@ -51,25 +53,13 @@ async function fetchDemos(spaceId) {
 
 function displayDemos(demos, callbackFunction) {
   if (!demos) {
-    const errorModal = createNewModalElement();
-    const container = createContainer();
-
-    const errorMessage = document.createElement("p");
-    errorMessage.textContent = "Failed to fetch demos. Please try again.";
-    errorMessage.style.color = "#FFF";
-    errorMessage.style.marginBottom = "10px";
-
-    const retryButton = createButton("Retry", "retry-button", async () => {
+    displayErrorModal("Failed to fetch demos. Please try again.", async () => {
       removeModalElement();
       await showDemoSelection(
         localStorage.getItem("spaceId"),
         callbackFunction
       );
     });
-
-    container.appendChild(errorMessage);
-    container.appendChild(retryButton);
-    errorModal.appendChild(container);
     return;
   } else {
     const selectedDemoId = localStorage.getItem("selectedDemoId");
@@ -77,13 +67,12 @@ function displayDemos(demos, callbackFunction) {
       const demoModalContent = createNewModalElement();
       const container = createContainer();
 
-      const demoListMessage = document.createElement("p");
+      const demoListMessage = createMessageElement(
+        "Or Select a Demo from the List Below:",
+        { marginBottom: "10px", color: "#FFF" }
+      );
       const demoList = document.createElement("div");
       if (demos.length > 0) {
-        demoListMessage.textContent = "Or Select a Demo from the List Below:";
-        demoListMessage.style.color = "#FFF";
-        demoListMessage.style.marginBottom = "10px";
-
         demoList.id = "demo-list";
         demoList.style.width = "100%";
         demos.forEach((demo) => {
@@ -93,15 +82,13 @@ function displayDemos(demos, callbackFunction) {
           demoList.appendChild(demoItem);
         });
       } else {
-        demoListMessage.textContent = "No demos found.Create a new demo";
-        demoListMessage.style.color = "#FFF";
-        demoListMessage.style.marginBottom = "10px";
+        demoListMessage.textContent = "No demos found. Create a new demo";
       }
-      const createDemoMessage = document.createElement("p");
-      createDemoMessage.textContent = "Create a New Demo:";
-      createDemoMessage.style.color = "#FFF";
-      createDemoMessage.style.marginTop = "20px";
-      createDemoMessage.style.marginBottom = "10px";
+      const createDemoMessage = createMessageElement("Create a New Demo:", {
+        marginTop: "20px",
+        marginBottom: "10px",
+        color: "#FFF",
+      });
       container.appendChild(createDemoMessage);
 
       const createDemoButton = createButton(
@@ -133,18 +120,16 @@ function displayDemos(demos, callbackFunction) {
       logoutButton.style.position = "relative";
       logoutButton.style.left = "0px";
       bottomBar.appendChild(logoutButton);
-      const dodao_full_screen_modal_wrapper = document.querySelector(
+      const modalWrapper = document.querySelector(
         "#dodao-full-screen-modal-wrapper"
       );
       const fullScreenModal =
-        dodao_full_screen_modal_wrapper.shadowRoot.querySelector(
-          ".full-screen-modal"
-        );
+        modalWrapper.shadowRoot.querySelector(".full-screen-modal");
       fullScreenModal.appendChild(bottomBar);
     } else {
       const selectedDemo = demos.find((demo) => demo.id === selectedDemoId);
       if (!selectedDemo) {
-        console.error("Selected demo not found or not exist");
+        console.error("Selected demo not found or does not exist");
         localStorage.removeItem("selectedDemoId");
       } else {
         const fullScreenModalWrapper = document.querySelector(
@@ -210,31 +195,35 @@ function displayDemos(demos, callbackFunction) {
 }
 
 function showCreateDemoScreen(callbackFunction) {
-  const createDemoElement = createNewModalElement(
-    "Enter demo details",
-    "demo-name-input",
-    "text"
-  );
+  const inputs = [
+    {
+      className: "demo-name-input",
+      placeholder: "Enter demo name",
+      styles: {
+        width: "90%",
+        padding: "10px",
+        marginBottom: "10px",
+      },
+    },
+    {
+      className: "demo-description-input",
+      placeholder: "Enter demo description",
+      styles: {
+        width: "90%",
+        padding: "10px",
+        marginBottom: "10px",
+      },
+    },
+  ];
 
-  const nameInput = createDemoElement.querySelector(".demo-name-input");
-  nameInput.placeholder = "Enter demo name";
-  nameInput.style.width = "90%";
-  nameInput.style.padding = "10px";
-  nameInput.style.marginBottom = "10px";
-
-  const descriptionInput = document.createElement("input");
-  descriptionInput.type = "text";
-  descriptionInput.placeholder = "Enter demo description";
-  descriptionInput.classList.add("demo-description-input");
-  descriptionInput.style.width = "90%";
-  descriptionInput.style.padding = "10px";
-  descriptionInput.style.marginBottom = "10px";
-  createDemoElement.appendChild(descriptionInput);
-
-  const submitButton = createButton(
-    "Create Demo",
-    "create-demo-button",
-    async () => {
+  createModalForm({
+    title: "Enter demo details",
+    inputs: inputs,
+    submitButtonText: "Create Demo",
+    submitButtonClass: "create-demo-button",
+    submitButtonHandler: async () => {
+      const nameInput = inputs[0].element;
+      const descriptionInput = inputs[1].element;
       const name = nameInput.value;
       const description = descriptionInput.value;
       if (name && description) {
@@ -247,25 +236,15 @@ function showCreateDemoScreen(callbackFunction) {
       } else {
         alert("Please enter both name and description for the demo.");
       }
-    }
-  );
-  submitButton.style.width = "calc(50% - 10px)";
-  submitButton.style.padding = "12px 20px";
-
-  const cancelButton = createButton("Cancel", "cancel-button", async () => {
-    removeModalElement();
-    await showDemoSelection(localStorage.getItem("spaceId"), callbackFunction);
+    },
+    cancelButtonHandler: async () => {
+      removeModalElement();
+      await showDemoSelection(
+        localStorage.getItem("spaceId"),
+        callbackFunction
+      );
+    },
   });
-  cancelButton.style.width = "calc(50% - 10px)";
-  cancelButton.style.padding = "12px 20px";
-
-  const buttonContainer = document.createElement("div");
-  buttonContainer.style.display = "flex";
-  buttonContainer.style.justifyContent = "space-between";
-  buttonContainer.style.width = "90%";
-  buttonContainer.appendChild(submitButton);
-  buttonContainer.appendChild(cancelButton);
-  createDemoElement.appendChild(buttonContainer);
 }
 
 async function createDemo(demoName, demoDescription) {
@@ -298,6 +277,124 @@ async function selectDemo(demo, callbackFunction) {
   await showDemoSelection(localStorage.getItem("spaceId"), callbackFunction);
 }
 
+function showSaveFileScreen(demo, callbackFunction) {
+  const inputs = [
+    {
+      className: "file-name-input",
+      placeholder: "Enter file name",
+      styles: {
+        width: "90%",
+        marginBottom: "10px",
+      },
+    },
+  ];
+
+  createModalForm({
+    title: "Save File",
+    inputs: inputs,
+    submitButtonText: "Save File",
+    submitButtonClass: "save-file-button",
+    submitButtonHandler: async () => {
+      const nameInput = inputs[0].element;
+      if (nameInput.value) {
+        const simulationOptions = {
+          fileName: nameInput.value,
+          objectId: demo.title.replace(/\s+/g, "-"),
+        };
+        const fullScreenModalWrapper = document.querySelector(
+          "#dodao-full-screen-modal-wrapper"
+        );
+        const bottomBar = document.querySelector("#bottom-bar");
+        if (fullScreenModalWrapper && bottomBar) {
+          fullScreenModalWrapper.remove();
+          bottomBar.remove();
+        }
+        await callbackFunction(simulationOptions);
+        await takeInputsFromUser(callbackFunction);
+      } else {
+        alert("Please enter a file name to save the file.");
+      }
+    },
+    cancelButtonHandler: async () => {
+      removeModalElement();
+      await showDemoSelection(
+        localStorage.getItem("spaceId"),
+        callbackFunction
+      );
+    },
+  });
+}
+
+/* Helper Functions */
+
+function createModalForm({
+  title,
+  inputs,
+  submitButtonText,
+  submitButtonClass,
+  submitButtonHandler,
+  cancelButtonText = "Cancel",
+  cancelButtonClass = "cancel-button",
+  cancelButtonHandler,
+}) {
+  const modalElement = createNewModalElement(title);
+
+  const formContainer = modalElement;
+
+  inputs.forEach((inputConfig) => {
+    const inputElement = createInputElement(
+      inputConfig.type || "text",
+      inputConfig.placeholder || "",
+      inputConfig.className || "",
+      inputConfig.styles || {}
+    );
+    formContainer.appendChild(inputElement);
+    inputConfig.element = inputElement; // Save reference to element
+  });
+
+  const submitButton = createButton(
+    submitButtonText,
+    submitButtonClass,
+    submitButtonHandler
+  );
+  submitButton.style.width = "calc(50% - 10px)";
+  submitButton.style.padding = "12px 20px";
+
+  const cancelButton = createButton(
+    cancelButtonText,
+    cancelButtonClass,
+    cancelButtonHandler
+  );
+  cancelButton.style.width = "calc(50% - 10px)";
+  cancelButton.style.padding = "12px 20px";
+
+  const buttonContainer = createButtonContainer([submitButton, cancelButton]);
+  formContainer.appendChild(buttonContainer);
+
+  return inputs; // Return inputs array with elements attached
+}
+
+function createInputElement(type, placeholder, className, styles = {}) {
+  const input = document.createElement("input");
+  input.type = type;
+  input.placeholder = placeholder;
+  if (className) {
+    input.classList.add(className);
+  }
+  Object.assign(input.style, styles);
+  return input;
+}
+
+function createButtonContainer(buttons, styles = {}) {
+  const container = document.createElement("div");
+  container.style.display = "flex";
+  container.style.justifyContent = "space-between";
+  container.style.width = "90%";
+  Object.assign(container.style, styles);
+  buttons.forEach((button) => container.appendChild(button));
+  return container;
+}
+
 function createNewModalElement(
   placeholder = "",
   inputClass = "",
@@ -323,10 +420,7 @@ function createNewModalElement(
   contentElement.classList.add("modal-content");
 
   if (inputClass) {
-    const inputElement = document.createElement("input");
-    inputElement.type = inputType;
-    inputElement.placeholder = placeholder;
-    inputElement.classList.add(inputClass);
+    const inputElement = createInputElement(inputType, placeholder, inputClass);
     contentElement.appendChild(inputElement);
   }
   modalElement.appendChild(contentElement);
@@ -417,6 +511,7 @@ button:hover, button:focus {
     `;
   return styleElement;
 }
+
 function createBottomBarStyle() {
   const styleElement = document.createElement("style");
   styleElement.textContent = `
@@ -480,6 +575,7 @@ function createBottomBarStyle() {
     `;
   return styleElement;
 }
+
 function createContainer() {
   const container = document.createElement("div");
   container.style.display = "flex";
@@ -518,61 +614,24 @@ function removeModalElement() {
   }
 }
 
-function showSaveFileScreen(demo, callbackFunction) {
-  const uploadModalElement = createNewModalElement(
-    "Save File",
-    "file-name-input",
-    "text"
-  );
-  const nameInput = uploadModalElement.querySelector(".file-name-input");
-  nameInput.placeholder = "Enter file name";
-  nameInput.style.width = "90%";
-  nameInput.style.marginBottom = "10px";
+function displayErrorModal(message, retryHandler) {
+  const errorModal = createNewModalElement();
+  const container = createContainer();
 
-  const existingFilesContainer = document.createElement("div");
-  existingFilesContainer.id = "existing-files";
-  existingFilesContainer.style.marginBottom = "20px";
-  existingFilesContainer.style.width = "90%";
-  uploadModalElement.appendChild(existingFilesContainer);
-
-  const submitButton = createButton(
-    "Save File",
-    "save-file-button",
-    async () => {
-      if (nameInput.value) {
-        const simulationOptions = {
-          fileName: nameInput.value,
-          objectId: demo.title.replace(/\s+/g, "-"),
-        };
-        const fullScreenModalWrapper = document.querySelector(
-          "#dodao-full-screen-modal-wrapper"
-        );
-        const bottomBar = document.querySelector("#bottom-bar");
-        if (fullScreenModalWrapper && bottomBar) {
-          fullScreenModalWrapper.remove();
-          bottomBar.remove();
-        }
-        await callbackFunction(simulationOptions);
-        await takeInputsFromUser(callbackFunction);
-      } else {
-        alert("Please enter a file name to save the file.");
-      }
-    }
-  );
-  submitButton.style.width = "calc(50% - 10px)";
-  submitButton.style.padding = "12px 20px";
-  const cancelButton = createButton("Cancel", "cancel-button", async () => {
-    removeModalElement();
-    await showDemoSelection(localStorage.getItem("spaceId"), callbackFunction);
+  const errorMessage = createMessageElement(message, {
+    marginBottom: "10px",
+    color: "#FFF",
   });
-  cancelButton.style.width = "calc(50% - 10px)";
-  cancelButton.style.padding = "12px 20px";
 
-  const buttonContainer = document.createElement("div");
-  buttonContainer.style.display = "flex";
-  buttonContainer.style.justifyContent = "space-between";
-  buttonContainer.style.width = "90%";
-  buttonContainer.appendChild(submitButton);
-  buttonContainer.appendChild(cancelButton);
-  uploadModalElement.appendChild(buttonContainer);
+  const retryButton = createButton("Retry", "retry-button", retryHandler);
+
+  container.appendChild(errorMessage);
+  container.appendChild(retryButton);
+  errorModal.appendChild(container);
+}
+function createMessageElement(text, styles = {}) {
+  const messageElement = document.createElement("p");
+  messageElement.textContent = text;
+  Object.assign(messageElement.style, styles);
+  return messageElement;
 }
