@@ -1,4 +1,8 @@
-export async function uploadFileToDodao(simulationOptions, blob, callbackFunction) {
+export async function uploadFileToDodao(
+  simulationOptions,
+  blob,
+  callbackFunction
+) {
   console.log("Uploading file to DoDAO", simulationOptions, blob);
 
   const fileName = simulationOptions.fileName;
@@ -16,7 +20,9 @@ export async function uploadFileToDodao(simulationOptions, blob, callbackFunctio
     const modifiedHtml = injectScriptLinkTags(htmlContent);
 
     // Create a new file with the modified HTML
-    const editedFile = new File([modifiedHtml], file.name, { type: "text/html" });
+    const editedFile = new File([modifiedHtml], file.name, {
+      type: "text/html",
+    });
 
     const input = {
       imageType: "ClickableDemos",

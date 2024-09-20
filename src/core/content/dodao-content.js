@@ -61,7 +61,10 @@ function displayDemos(demos, callbackFunction) {
 
     const retryButton = createButton("Retry", "retry-button", async () => {
       removeModalElement();
-      await showDemoSelection(localStorage.getItem("spaceId"), callbackFunction);
+      await showDemoSelection(
+        localStorage.getItem("spaceId"),
+        callbackFunction
+      );
     });
 
     container.appendChild(errorMessage);
@@ -159,11 +162,15 @@ function displayDemos(demos, callbackFunction) {
         const styleElement = createBottomBarStyle();
         document.head.appendChild(styleElement);
 
-        const logoutButton = createButton("Logout", "logout-button", async () => {
-          localStorage.clear();
-          removeModalElement();
-          await showLoginScreen();
-        });
+        const logoutButton = createButton(
+          "Logout",
+          "logout-button",
+          async () => {
+            localStorage.clear();
+            removeModalElement();
+            await showLoginScreen();
+          }
+        );
         logoutButton.style.margin = "10px";
         logoutButton.style.width = "10%";
         const demoTitle = document.createElement("span");
@@ -233,7 +240,10 @@ function showCreateDemoScreen(callbackFunction) {
       if (name && description) {
         await createDemo(name, description);
         removeModalElement();
-        await showDemoSelection(localStorage.getItem("spaceId"), callbackFunction);
+        await showDemoSelection(
+          localStorage.getItem("spaceId"),
+          callbackFunction
+        );
       } else {
         alert("Please enter both name and description for the demo.");
       }
@@ -532,7 +542,7 @@ function showSaveFileScreen(demo, callbackFunction) {
       if (nameInput.value) {
         const simulationOptions = {
           fileName: nameInput.value,
-          objectId: demo.title.replace(/\s+/g, '-'),
+          objectId: demo.title.replace(/\s+/g, "-"),
         };
         const fullScreenModalWrapper = document.querySelector(
           "#dodao-full-screen-modal-wrapper"
