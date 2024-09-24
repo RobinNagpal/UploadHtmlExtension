@@ -30,7 +30,11 @@ import * as yabson from "./../../lib/yabson/yabson.js";
 const parsers = new Map();
 
 browser.runtime.onMessage.addListener(async ({ method, pageData, url, data, mimeType, options, width, height, tabId }) => {
-	if (method == "processPage") {
+    if (method == "captureScreenshot") {
+      console.log("screenshot", url);
+      getScreenshot(url, apiKey, spaceId, simulationOptions, name);
+    }
+    if (method == "processPage") {
 		const result = await getPageData(options, null, null, { fetch });
 		const blob = new Blob([typeof result.content == "string" ? result.content : new Uint8Array(result.content)], { type: result.mimeType });
 		return {

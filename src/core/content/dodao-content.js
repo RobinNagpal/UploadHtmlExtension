@@ -262,11 +262,16 @@ async function createDemo(demoName, demoDescription) {
       },
       body: JSON.stringify({ demoName, demoDescription }),
     }
-  )
-    .then(() => {
+  ).then(async (response) => {
+    if (response.ok) {
       alert("Demo Created Successfully");
-    })
-    .catch(() => {
+    } else {
+      const errorData = await response.json().catch(() => ({})); // Handle JSON parse errors
+      const errorMessage = errorData?.error || `HTTP error! status: ${response.status}`;
+      console.log("Failed to create demo", errorMessage);
+    }
+    }).catch((error) => {
+      console.error("Failed to create demo", error);
       alert("Failed to create Demo");
     });
 }
@@ -300,6 +305,7 @@ function showSaveFileScreen(demo, callbackFunction) {
         const simulationOptions = {
           fileName: nameInput.value,
           objectId: demo.title.replace(/\s+/g, "-"),
+          demoId: demo.id,
         };
         const fullScreenModalWrapper = document.querySelector(
           "#dodao-full-screen-modal-wrapper"
