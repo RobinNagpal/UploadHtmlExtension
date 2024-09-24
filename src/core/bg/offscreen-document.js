@@ -26,7 +26,7 @@
 import "./../../../lib/chrome-browser-polyfill.js";
 import { getPageData, compress } from "./../../index.js";
 import * as yabson from "./../../lib/yabson/yabson.js";
-
+import { getScreenshot } from "./dodao-upload.js";
 const parsers = new Map();
 
 browser.runtime.onMessage.addListener(async ({ method, pageData, url, data, mimeType, options, width, height, tabId }) => {
