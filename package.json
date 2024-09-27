@@ -11,7 +11,8 @@
 	"type": "module",
 	"dependencies": {
 		"html2canvas": "^1.4.1",
-		"single-file-core": "1.5.16"
+		"single-file-core": "1.5.16",
+		"uuid": "^10.0.0"
 	},
 	"devDependencies": {
 		"@rollup/plugin-node-resolve": "15.2.3",

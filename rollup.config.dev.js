@@ -111,7 +111,8 @@ export default [{
 		file: "lib/single-file-extension.js",
 		format: "iife",
 		plugins: []
-	}]
+	}],
+	plugins:[resolve()]
 }, {
 	input: ["src/ui/content/content-ui-editor-init-web.js"],
 	output: [{
