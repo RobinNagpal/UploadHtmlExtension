@@ -565,7 +565,42 @@ function addLogoutButton() {
   fullScreenModal.appendChild(bottomBar);
 }
 
-function showSaveFileScreen(demo, callbackFunction) {
+async function showSaveFileScreen(demo, callbackFunction) {
+  const spaceId = localStorage.getItem("spaceId");
+  const demoId = demo.demoId;
+  const apiKey = localStorage.getItem("apiKey"); // Get the API key from local storage
+
+  // Fetch existing files from API
+  const apiUrl = `http://localhost:3000/api/${spaceId}/html-captures/${demoId}`;
+  let existingFiles = [];
+  console.log(apiUrl)
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-KEY': apiKey, // Include the API key in the headers
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch existing files.");
+    }
+    existingFiles = await response.json();
+    console.log(existingFiles)
+  } catch (error) {
+    console.error("Error fetching existing files:", error);
+    // Handle error as needed
+  }
+
+  // Prepare existing files HTML
+  const existingFilesHtml = existingFiles.map(file => `
+    <div class="existing-file-item">
+      <img src="${file.fileImageUrl}" alt="${file.fileName}" />
+      <span>${file.fileName}</span>
+    </div>
+  `).join('');
+
   const inputs = [
     {
       className: "file-name-input",
@@ -575,6 +610,10 @@ function showSaveFileScreen(demo, callbackFunction) {
         marginBottom: "10px",
       },
     },
+    {
+      className: "existing-files-container",
+      content: existingFilesHtml,
+    }
   ];
 
   createModalForm({
