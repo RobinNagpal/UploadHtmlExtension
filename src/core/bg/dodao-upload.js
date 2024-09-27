@@ -326,7 +326,7 @@ async function uploadScreenshot(screenshotFile, apiKey, spaceId, input) {
   return screenshotUrl;
 }
 async function saveDodaoCapture(input, apiKey) {
-  const response = await fetch("http://localhost:3000/api/test-academy-eth/actions/html-captures", {
+  const response = await fetch("http://localhost:3000/api/test-academy-eth/html-captures", {
     method: "POST",
     headers: {
       "X-API-KEY": apiKey,
