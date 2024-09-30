@@ -568,18 +568,15 @@ function addLogoutButton() {
 async function showSaveFileScreen(demo, callbackFunction) {
   const spaceId = localStorage.getItem("spaceId");
   const demoId = demo.demoId;
-  const apiKey = localStorage.getItem("apiKey"); // Get the API key from local storage
-
-  // Fetch existing files from API
+  const apiKey = localStorage.getItem("apiKey");
   const apiUrl = `http://localhost:3000/api/${spaceId}/html-captures/${demoId}`;
   let existingFiles = [];
-  console.log(apiUrl)
   try {
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-KEY': apiKey, // Include the API key in the headers
+        'X-API-KEY': apiKey, 
       },
     });
 
@@ -587,19 +584,25 @@ async function showSaveFileScreen(demo, callbackFunction) {
       throw new Error("Failed to fetch existing files.");
     }
     existingFiles = await response.json();
-    console.log(existingFiles)
   } catch (error) {
     console.error("Error fetching existing files:", error);
-    // Handle error as needed
   }
-
-  // Prepare existing files HTML
-  const existingFilesHtml = existingFiles.map(file => `
-    <div class="existing-file-item">
-      <img src="${file.fileImageUrl}" alt="${file.fileName}" />
-      <span>${file.fileName}</span>
-    </div>
-  `).join('');
+  const existingFilesHtml = `
+    <table class="existing-files-table">
+      <thead>
+        <tr>
+          <th>Existing files in Demo ${demo.title}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${existingFiles.map(file => `
+          <tr>
+            <td>${file.fileName}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
 
   const inputs = [
     {
@@ -609,10 +612,6 @@ async function showSaveFileScreen(demo, callbackFunction) {
         width: "90%",
         marginBottom: "10px",
       },
-    },
-    {
-      className: "existing-files-container",
-      content: existingFilesHtml,
     }
   ];
 
@@ -629,9 +628,7 @@ async function showSaveFileScreen(demo, callbackFunction) {
           objectId: demo.title.replace(/\s+/g, "-"),
           demoId: demo.demoId,
         };
-        const fullScreenModalWrapper = document.querySelector(
-          "#dodao-full-screen-modal-wrapper"
-        );
+        const fullScreenModalWrapper = document.querySelector("#dodao-full-screen-modal-wrapper");
         const bottomBar = document.querySelector("#bottom-bar");
         if (fullScreenModalWrapper) fullScreenModalWrapper.remove();
         if (bottomBar) bottomBar.remove();
@@ -649,7 +646,16 @@ async function showSaveFileScreen(demo, callbackFunction) {
       );
     },
   });
+    const existingFilesContainer = document.createElement('div');
+    existingFilesContainer.className = 'existing-files-container';
+    existingFilesContainer.innerHTML = existingFilesHtml;
+
+    const fullScreenModalWrapper = document.querySelector("#dodao-full-screen-modal-wrapper");
+    if (fullScreenModalWrapper) {
+      fullScreenModalWrapper.shadowRoot.querySelector('.full-screen-modal').appendChild(existingFilesContainer);
+    }
 }
+
 
 /* Helper Functions */
 
@@ -780,6 +786,7 @@ function createModalStyle() {
       top: 0;
       left: 0;
       font-size: 24px;
+      flex-direction: column;
       width: 100%;
       height: 100%;
       z-index: 2147483647;
@@ -790,6 +797,49 @@ function createModalStyle() {
       backdrop-filter: blur(10px);
       color: #ffffff;
     }
+    .existing-files-container {
+        width: 60%;
+        margin-top: 50px;
+        padding: 10px;
+        background-color: #333;
+        border-radius: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+    .existing-files-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+      color: #fff;
+    }
+
+    .existing-files-table th {
+      background-color: #444;
+      color: #fff;
+      padding: 12px;
+      text-align: left;
+      border-bottom: 2px solid #555;
+      font-size: 18px;
+    }
+
+    .existing-files-table td {
+      padding: 10px;
+      border-bottom: 1px solid #555;
+    }
+    .existing-files-table tr:nth-child(odd) {
+        background-color: #3a3a3a;
+      }
+
+      .existing-files-table tr:nth-child(even) {
+        background-color: #2c2c2c;
+      }
+
+      /* Hover effect on rows */
+      .existing-files-table tr:hover {
+        background-color: #505050;
+        transition: background-color 0.3s ease;
+      }
     .modal-content {
       width: 90%;
       max-width:800px;
