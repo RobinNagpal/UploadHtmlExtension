@@ -10,7 +10,6 @@ export async function takeInputsFromUser(showLogin, callbackFunction) {
           console.log(`Saved ${key}: ${value} to local storage`);
         }
         takeInputsFromUser(showLogin,callbackFunction);
-        sendResponse({ status: "success", message: "Data saved to local storage" });
       }
       if (message.showUI == false) {
         localStorage.setItem("showUI", false);
