@@ -32,8 +32,9 @@ export async function uploadFileToDodao(
     };
 
     // Fetch 'spaceId' and 'apiKey' from chrome.storage
-    const { spaceId, apiKey ,selecteCollectionId,selectedDemoId } = await getFromStorage(["spaceId", "apiKey","selectedCollectionId","selectedDemoId"]);
-    if (!spaceId || !apiKey || !selecteCollectionId || !selectedDemoId) {
+    const { spaceId, apiKey, selecteCollectionId, selectedDemoId } = await getFromStorage(["spaceId", "apiKey", "selectedCollectionId", "selectedDemoId"]);
+    console.log("Uploading file to DoDAO" ,spaceId, apiKey, selecteCollectionId, selectedDemoId);
+    if (!spaceId || !apiKey) {
       console.log("No data found in chrome.storage");
       return;
     }

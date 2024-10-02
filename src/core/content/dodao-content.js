@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
 export async function takeInputsFromUser(showLogin, callbackFunction) {
-  console.log(showLogin)
     const spaceId = localStorage.getItem("spaceId");
     const apiKey = localStorage.getItem("apiKey");
     browser.runtime.onMessage.addListener(message => {
