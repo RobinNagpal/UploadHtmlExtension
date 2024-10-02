@@ -84,7 +84,7 @@ async function onMessage(message) {
 			alert("File uploaded successfully.")
 			}
 		if (message.method == "content.save") {
-			await takeInputsFromUser(async (simulationOptions) => {
+			await takeInputsFromUser(message.options.showLoginScreen,async (simulationOptions) => {
 				// TODO - make sure callback is called after the save and clicked and the user adds the name of the file
 
 				/*
