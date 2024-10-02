@@ -1,14 +1,44 @@
 import { v4 as uuidv4 } from "uuid";
-
-export async function takeInputsFromUser(callbackFunction) {
-  const spaceId = localStorage.getItem("spaceId");
-  const apiKey = localStorage.getItem("apiKey");
-
-  if (!spaceId || !apiKey) {
-    showLoginScreen(callbackFunction);
-  } else {
-    await showCollectionSelection(spaceId, callbackFunction);
-  }
+export async function takeInputsFromUser(showLogin, callbackFunction) {
+  console.log(showLogin)
+    const spaceId = localStorage.getItem("spaceId");
+    const apiKey = localStorage.getItem("apiKey");
+    browser.runtime.onMessage.addListener(message => {
+      if (message.localStorageData) {
+        for (const [key, value] of Object.entries(message.localStorageData)) {
+          // Save the data to local storage
+          localStorage.setItem(key, value);
+          console.log(`Saved ${key}: ${value} to local storage`);
+        }
+        takeInputsFromUser(showLogin,callbackFunction);
+        sendResponse({ status: "success", message: "Data saved to local storage" });
+      }
+      if (message.showUI == false) {
+        localStorage.setItem("showUI", false);
+        const fullScreenModalWrapper = document.querySelector("#dodao-full-screen-modal-wrapper");
+        if (fullScreenModalWrapper) {
+          fullScreenModalWrapper.remove();
+        }
+        const bottomBar = document.querySelector("#bottom-bar");
+        if (bottomBar) {
+          bottomBar.remove();
+        }
+      }
+      if (message.showUI == true) {
+        localStorage.setItem("showUI", true);
+       
+      }
+      
+    });
+    if ((!spaceId || !apiKey) && showLogin) {
+      showLoginScreen(callbackFunction);
+    }
+    else if ((!spaceId || !apiKey) && !showLogin) { 
+      return
+    }
+    else {
+      await showCollectionSelection(spaceId, callbackFunction);
+    }
 }
 
 function showLoginScreen(callbackFunction) {
@@ -41,8 +71,15 @@ function showLoginScreen(callbackFunction) {
     submitButtonHandler: async () => {
       const spaceIdInput = inputs[0].element;
       const apiKeyInput = inputs[1].element;
-      localStorage.setItem("spaceId", spaceIdInput.value);
-      localStorage.setItem("apiKey", apiKeyInput.value);
+      if (!spaceIdInput.value || !apiKeyInput.value) {
+        alert("Please enter both Space ID and API Key.");
+        return;
+      }
+      else {
+        browser.runtime.sendMessage({method:"updateLocalStorage",spaceId:spaceIdInput.value,apiKey:apiKeyInput.value});
+        localStorage.setItem("spaceId", spaceIdInput.value);
+        localStorage.setItem("apiKey", apiKeyInput.value);
+      }
       await showCollectionSelection(spaceIdInput.value, callbackFunction);
     },
   });
@@ -81,7 +118,6 @@ async function fetchCollections(spaceId) {
 
 function displayCollections(collections, callbackFunction) {
   const selectedCollectionId = localStorage.getItem("selectedCollectionId");
-
   if (!selectedCollectionId) {
     showCollectionList(collections, callbackFunction);
   } else {
@@ -251,6 +287,7 @@ async function createCollection(name, description) {
 
 async function selectCollection(collection, callbackFunction) {
   localStorage.setItem("selectedCollectionId", collection.id);
+  browser.runtime.sendMessage({method:"updateLocalStorage",selectedCollectionId:collection.id});
   removeModalElement();
   await showCollectionSelection(
     localStorage.getItem("spaceId"),
@@ -345,6 +382,7 @@ function setupBottomBarForDemos(callbackFunction) {
   document.head.appendChild(styleElement);
 
   const logoutButton = createButton("Logout", "logout-button", async () => {
+    browser.runtime.sendMessage({ method: "clearLocalStorage" });
     localStorage.clear();
     removeModalElement();
     showLoginScreen(callbackFunction);
@@ -394,6 +432,7 @@ function setupBottomBarWithDemo(selectedDemo, callbackFunction) {
   const styleElement = createBottomBarStyle();
   document.head.appendChild(styleElement);
   const logoutButton = createButton("Logout", "logout-button", async () => {
+    browser.runtime.sendMessage({ method: "clearLocalStorage" });
     localStorage.clear();
     removeModalElement();
     showLoginScreen(callbackFunction);
@@ -535,6 +574,7 @@ async function createDemo(title, excerpt) {
 }
 
 async function selectDemo(demo, callbackFunction) {
+  browser.runtime.sendMessage({method:"updateLocalStorage",selectedDemoId: demo.demoId });
   localStorage.setItem("selectedDemoId", demo.demoId);
   removeModalElement();
   await showCollectionSelection(
@@ -548,6 +588,7 @@ function addLogoutButton() {
   bottomBar.id = "bottom-bar";
   
   const logoutButton = createButton("Logout", "logout-button", async () => {
+    browser.runtime.sendMessage({ method: "clearLocalStorage" });
     localStorage.clear();
     removeModalElement();
     showLoginScreen();
@@ -633,7 +674,7 @@ async function showSaveFileScreen(demo, callbackFunction) {
         if (fullScreenModalWrapper) fullScreenModalWrapper.remove();
         if (bottomBar) bottomBar.remove();
         await callbackFunction(simulationOptions);
-        await takeInputsFromUser(callbackFunction);
+        await takeInputsFromUser(false,callbackFunction);
       } else {
         alert("Please enter a file name to save the file.");
       }

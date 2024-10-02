@@ -5,7 +5,6 @@ export async function uploadFileToDodao(
   callbackFunction
 ) {
   console.log("Uploading file to DoDAO", simulationOptions, blob);
-
   const fileName = simulationOptions.fileName;
   if (!fileName) {
     await sendErrorMessage("Enter File Name");
@@ -33,8 +32,8 @@ export async function uploadFileToDodao(
     };
 
     // Fetch 'spaceId' and 'apiKey' from chrome.storage
-    const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
-    if (!spaceId || !apiKey) {
+    const { spaceId, apiKey ,selecteCollectionId,selectedDemoId } = await getFromStorage(["spaceId", "apiKey","selectedCollectionId","selectedDemoId"]);
+    if (!spaceId || !apiKey || !selecteCollectionId || !selectedDemoId) {
       console.log("No data found in chrome.storage");
       return;
     }
@@ -245,9 +244,7 @@ export async function getScreenshot(url, apiKey, spaceId, simulationOptions, nam
           };
 
           await saveDodaoCapture(captureInput, apiKey);
-
-          const dataUrl = canvas.toDataURL("image/png");
-          chrome.runtime.sendMessage({ action: "screenshotCaptured", dataUrl });
+          chrome.runtime.sendMessage({ action: "screenshotCaptured"});
         }
       } catch (error) {
         console.error("Error capturing screenshot:", error);

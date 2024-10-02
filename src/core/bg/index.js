@@ -45,8 +45,22 @@ browser.runtime.onMessage.addListener((message, sender) => {
 	if (message.method.startsWith("tabs.")) {
 		return tabs.onMessage(message, sender);
 	}
+	if (message.method.startsWith("updateLocalStorage")) { 
+		if (message.spaceId && message.apiKey) {
+			chrome.storage.local.set({ spaceId: message.spaceId,apiKey: message.apiKey })
+		}
+		if (message.selectedCollectionId) {
+			chrome.storage.local.set({ selectedCollectionId: message.selectedCollectionId })
+		}
+		if (message.selectedDemoId) {
+			chrome.storage.local.set({ selectedDemoId: message.selectedDemoId })
+		}
+	}
+	if (message.method.startsWith("clearLocalStorage")) {
+		const keysToRemove = ['spaceId', 'selectedDemoId', 'apiKey', 'selectedCollectionId'];
+		chrome.storage.local.remove(keysToRemove);
+	 }
 	if (message.method.startsWith("downloads.")) {
-		chrome.storage.local.set({ spaceId: message.spaceId,apiKey: message.apiKey })
 		return downloads.onMessage(message, sender);
 	}
 	if (message.method.startsWith("autosave.")) {
