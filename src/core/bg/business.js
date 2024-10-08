@@ -100,7 +100,7 @@ async function saveUrls(urls, options = {}) {
 	runTasks();
 }
 
-async function saveTabs(tabs, options = {}) {
+async function saveTabs(tabs, options = {},showLoginScreen) {
 	await initMaxParallelWorkers();
 	await Promise.all(tabs.map(async tab => {
 		const tabId = tab.id;
@@ -132,7 +132,8 @@ async function saveTabs(tabs, options = {}) {
 				addTask({
 					status: TASK_PENDING_STATE,
 					tab: tabData,
-					options: tabOptions,
+					options: { ...tabOptions ,showLoginScreen:showLoginScreen,},
+					
 					method: "content.save"
 				});
 			} else {

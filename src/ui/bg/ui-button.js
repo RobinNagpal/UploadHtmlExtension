@@ -122,10 +122,28 @@ browser.action.onClicked.addListener(async tab => {
 	function toggleSaveTab(tab) {
 		if (business.isSavingTab(tab)) {
 			business.cancelTab(tab.id);
+			sendMessageNotToShowUI(false);
 		} else {
-			business.saveTabs([tab]);
+			business.saveTabs([tab],{},true);
 		}
 	}
+	function sendMessageNotToShowUI(showUI) {
+		console.log("Sending message to not show UI to active tab");
+		return new Promise((resolve) => {
+		  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+			if (tabs.length > 0) {
+			  // Send the message to not show UI to the active tab
+			  chrome.tabs.sendMessage(tabs[0].id, { showUI: showUI }, (response) => {
+				// If there is a response from the content script, resolve the promise with that response
+				resolve(response);
+			  });
+			} else {
+			  resolve(); // No active tabs found, resolve without a value
+			}
+		  });
+		});
+	  }
+	  
 });
 
 export {

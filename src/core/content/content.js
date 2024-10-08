@@ -28,6 +28,7 @@ import { fetch, frameFetch } from "./../../lib/single-file/fetch/content/content
 import * as ui from "./../../ui/content/content-ui.js";
 import { onError, getOpenFileBar, openFile, setLabels } from "./../../ui/common/common-content-ui.js";
 import * as yabson from "./../../lib/yabson/yabson.js";
+import {takeInputsFromUser} from "./dodao-content.js";
 
 const singlefile = globalThis.singlefile;
 const bootstrap = globalThis.singlefileBootstrap;
@@ -50,6 +51,7 @@ setLabels({
 if (!bootstrap || !bootstrap.initializedSingleFile) {
 	singlefile.init({ fetch, frameFetch });
 	browser.runtime.onMessage.addListener(message => {
+		console.log("message.method", message);
 		if (message.method == "content.save" ||
 			message.method == "content.cancelSave" ||
 			message.method == "content.download" ||
@@ -58,7 +60,9 @@ if (!bootstrap || !bootstrap.initializedSingleFile) {
 			message.method == "content.prompt" ||
 			message.method == "content.beginScrollTo" ||
 			message.method == "content.scrollTo" ||
-			message.method == "content.endScrollTo") {
+			message.method == "content.endScrollTo" ||
+			message.error ||
+			message.success) {
 			return onMessage(message);
 		}
 	});
@@ -71,8 +75,44 @@ if (!bootstrap || !bootstrap.initializedSingleFile) {
 
 async function onMessage(message) {
 	if (!location.href.startsWith(MOZ_EXTENSION_PROTOCOL)) {
+		if (message.error) {
+			console.log(message)
+			alert("Failed to upload. Please try again later.")
+		}
+		if (message.success) {
+			console.log(message)
+			alert("File uploaded successfully.")
+			}
 		if (message.method == "content.save") {
-			await savePage(message);
+			await takeInputsFromUser(message.options.showLoginScreen,async (simulationOptions) => {
+				// TODO - make sure callback is called after the save and clicked and the user adds the name of the file
+
+				/*
+				- On the bottom bar we display the save button in the green color
+				- When the save button is clicked, We then ask the user for the name of the file.
+				- After we have the name of the file, we can then call this callback which will then do the save page stuff and download the page.
+				- After download, uploading of the file to the server will be done in "src/core/bg/downloads.js"
+				- In "src/core/bg/downloads.js" we will have a else if block for the "saveWithTidbitsHub" option.
+				- We can create another file dodao-upload.js in the "src/core/bg/" folder to handle the uploading of the file to the server.
+				- TODO: We need to see how do we show success to the user after the file is uploaded to the server.
+
+
+
+
+				The simulations options should have the following structure
+				`academy/${spaceId}/${imageType}/${objectId}/${Date.now()}_${name}`,
+					{
+					  fileName: "Step 5 simulation",
+					  objectId: ${"Hyphen-seperated-Clickable-demo-Name"}
+					}
+				*/
+				// in message.options
+				//
+
+				console.log("simulationOptions", simulationOptions);
+
+				await savePage({ ...message, options: { ...message.options, simulationOptions, saveWithTidbitsHub: true}});
+			});
 			return {};
 		}
 		if (message.method == "content.cancelSave") {
@@ -148,6 +188,7 @@ async function onMessage(message) {
 }
 
 async function savePage(message) {
+	console.log(message)
 	const pingInterval = setInterval(() => {
 		browser.runtime.sendMessage({ method: "ping" }).then(() => { });
 	}, 15000);
@@ -170,6 +211,7 @@ async function savePage(message) {
 			processing = true;
 			try {
 				const pageData = await processPage(options);
+				pageData.filename=message.options.simulationOptions.fileName;
 				if (pageData) {
 					await download.downloadPage(pageData, options);
 				}
@@ -195,7 +237,7 @@ async function savePage(message) {
 async function processPage(options) {
 	const frames = singlefile.processors.frameTree;
 	let framesSessionId;
-	options.keepFilename = options.saveToGDrive || options.saveToGitHub || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3;
+	options.keepFilename = options.saveToGDrive || options.saveToGitHub || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3 || options.saveWithTidbitsHub;
 	singlefile.helper.initDoc(document);
 	ui.onStartPage(options);
 	processor = new singlefile.SingleFile(options);

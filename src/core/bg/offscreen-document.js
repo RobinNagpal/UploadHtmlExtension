@@ -26,11 +26,14 @@
 import "./../../../lib/chrome-browser-polyfill.js";
 import { getPageData, compress } from "./../../index.js";
 import * as yabson from "./../../lib/yabson/yabson.js";
-
+import { getScreenshot } from "./dodao-upload.js";
 const parsers = new Map();
 
-browser.runtime.onMessage.addListener(async ({ method, pageData, url, data, mimeType, options, width, height, tabId }) => {
-	if (method == "processPage") {
+browser.runtime.onMessage.addListener(async ({ method, pageData, url, data, mimeType, options, width, height, tabId,apiKey,spaceId,simulationOptions,name }) => {
+    if (method == "captureScreenshot") {
+      getScreenshot(url, apiKey, spaceId, simulationOptions, name);
+    }
+    if (method == "processPage") {
 		const result = await getPageData(options, null, null, { fetch });
 		const blob = new Blob([typeof result.content == "string" ? result.content : new Uint8Array(result.content)], { type: result.mimeType });
 		return {
