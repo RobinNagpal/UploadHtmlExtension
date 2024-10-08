@@ -1,47 +1,47 @@
-import { v4 as uuidv4 } from "uuid";
-browser.runtime.onMessage.addListener((message) => { 
-  if (message.method === "dodaoContent.captureApiKey") { 
+import {v4 as uuidv4} from "uuid";
+
+browser.runtime.onMessage.addListener((message) => {
+  if (message.method === "dodaoContent.captureApiKey") {
     showLoginScreen();
   }
 });
+
 export async function takeInputsFromUser(showLogin, callbackFunction) {
-    const spaceId = localStorage.getItem("spaceId");
-    const apiKey = localStorage.getItem("apiKey");
-    browser.runtime.onMessage.addListener(message => {
-      if (message.localStorageData) {
-        for (const [key, value] of Object.entries(message.localStorageData)) {
-          // Save the data to local storage
-          localStorage.setItem(key, value);
-          console.log(`Saved ${key}: ${value} to local storage`);
-        }
-        takeInputsFromUser(showLogin,callbackFunction);
+  const spaceId = localStorage.getItem("spaceId");
+  const apiKey = localStorage.getItem("apiKey");
+  browser.runtime.onMessage.addListener(message => {
+    if (message.localStorageData) {
+      for (const [key, value] of Object.entries(message.localStorageData)) {
+        // Save the data to local storage
+        localStorage.setItem(key, value);
+        console.log(`Saved ${key}: ${value} to local storage`);
       }
-      if (message.showUI == false) {
-        localStorage.setItem("showUI", false);
-        const fullScreenModalWrapper = document.querySelector("#dodao-full-screen-modal-wrapper");
-        if (fullScreenModalWrapper) {
-          fullScreenModalWrapper.remove();
-        }
-        const bottomBar = document.querySelector("#bottom-bar");
-        if (bottomBar) {
-          bottomBar.remove();
-        }
+      takeInputsFromUser(showLogin, callbackFunction);
+    }
+    if (message.showUI == false) {
+      localStorage.setItem("showUI", false);
+      const fullScreenModalWrapper = document.querySelector("#dodao-full-screen-modal-wrapper");
+      if (fullScreenModalWrapper) {
+        fullScreenModalWrapper.remove();
       }
-      if (message.showUI == true) {
-        localStorage.setItem("showUI", true);
-       
+      const bottomBar = document.querySelector("#bottom-bar");
+      if (bottomBar) {
+        bottomBar.remove();
       }
-      
-    });
-    if ((!spaceId || !apiKey) && showLogin) {
-      showLoginScreen(callbackFunction);
     }
-    else if ((!spaceId || !apiKey) && !showLogin) { 
-      return
+    if (message.showUI == true) {
+      localStorage.setItem("showUI", true);
+
     }
-    else {
-      await showCollectionSelection(spaceId, callbackFunction);
-    }
+
+  });
+  if ((!spaceId || !apiKey) && showLogin) {
+    showLoginScreen(callbackFunction);
+  } else if ((!spaceId || !apiKey) && !showLogin) {
+    return
+  } else {
+    await showCollectionSelection(spaceId, callbackFunction);
+  }
 }
 
 function showLoginScreen(callbackFunction) {
@@ -77,9 +77,12 @@ function showLoginScreen(callbackFunction) {
       if (!spaceIdInput.value || !apiKeyInput.value) {
         alert("Please enter both Space ID and API Key.");
         return;
-      }
-      else {
-        browser.runtime.sendMessage({method: "dodaoBackground.saveSpaceIdAndApiKey", spaceId: spaceIdInput.value, apiKey: apiKeyInput.value});
+      } else {
+        browser.runtime.sendMessage({
+          method: "dodaoBackground.saveSpaceIdAndApiKey",
+          spaceId: spaceIdInput.value,
+          apiKey: apiKeyInput.value
+        });
         localStorage.setItem("spaceId", spaceIdInput.value);
         localStorage.setItem("apiKey", apiKeyInput.value);
       }
@@ -148,7 +151,7 @@ function showCollectionList(collections, callbackFunction) {
     collections.length > 0
       ? "Select a Collection from the List Below:"
       : "No collections found. Create a new collection.",
-    { marginBottom: "10px", color: "#FFF" }
+    {marginBottom: "10px", color: "#FFF"}
   );
 
   const collectionList = document.createElement("div");
@@ -290,7 +293,7 @@ async function createCollection(name, description) {
 
 async function selectCollection(collection, callbackFunction) {
   localStorage.setItem("selectedCollectionId", collection.id);
-  browser.runtime.sendMessage({method:"updateLocalStorage",selectedCollectionId:collection.id});
+  browser.runtime.sendMessage({method: "updateLocalStorage", selectedCollectionId: collection.id});
   removeModalElement();
   await showCollectionSelection(
     localStorage.getItem("spaceId"),
@@ -333,7 +336,7 @@ function showDemoList(collection, demos, callbackFunction) {
     demos.length > 0
       ? "Select a Demo from the List Below:"
       : "No demos found. Create a new demo.",
-    { marginBottom: "10px", color: "#FFF" }
+    {marginBottom: "10px", color: "#FFF"}
   );
 
   const demoList = document.createElement("div");
@@ -385,7 +388,7 @@ function setupBottomBarForDemos(callbackFunction) {
   document.head.appendChild(styleElement);
 
   const logoutButton = createButton("Logout", "logout-button", async () => {
-    browser.runtime.sendMessage({ method: "clearLocalStorage" });
+    browser.runtime.sendMessage({method: "clearLocalStorage"});
     localStorage.clear();
     removeModalElement();
     showLoginScreen(callbackFunction);
@@ -435,7 +438,7 @@ function setupBottomBarWithDemo(selectedDemo, callbackFunction) {
   const styleElement = createBottomBarStyle();
   document.head.appendChild(styleElement);
   const logoutButton = createButton("Logout", "logout-button", async () => {
-    browser.runtime.sendMessage({ method: "clearLocalStorage" });
+    browser.runtime.sendMessage({method: "clearLocalStorage"});
     localStorage.clear();
     removeModalElement();
     showLoginScreen(callbackFunction);
@@ -577,7 +580,7 @@ async function createDemo(title, excerpt) {
 }
 
 async function selectDemo(demo, callbackFunction) {
-  browser.runtime.sendMessage({method:"updateLocalStorage",selectedDemoId: demo.demoId });
+  browser.runtime.sendMessage({method: "updateLocalStorage", selectedDemoId: demo.demoId});
   localStorage.setItem("selectedDemoId", demo.demoId);
   removeModalElement();
   await showCollectionSelection(
@@ -589,9 +592,9 @@ async function selectDemo(demo, callbackFunction) {
 function addLogoutButton() {
   const bottomBar = createBottomBar();
   bottomBar.id = "bottom-bar";
-  
+
   const logoutButton = createButton("Logout", "logout-button", async () => {
-    browser.runtime.sendMessage({ method: "clearLocalStorage" });
+    browser.runtime.sendMessage({method: "clearLocalStorage"});
     localStorage.clear();
     removeModalElement();
     showLoginScreen();
@@ -620,7 +623,7 @@ async function showSaveFileScreen(demo, callbackFunction) {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-KEY': apiKey, 
+        'X-API-KEY': apiKey,
       },
     });
 
@@ -677,7 +680,7 @@ async function showSaveFileScreen(demo, callbackFunction) {
         if (fullScreenModalWrapper) fullScreenModalWrapper.remove();
         if (bottomBar) bottomBar.remove();
         await callbackFunction(simulationOptions);
-        await takeInputsFromUser(false,callbackFunction);
+        await takeInputsFromUser(false, callbackFunction);
       } else {
         alert("Please enter a file name to save the file.");
       }
@@ -690,30 +693,30 @@ async function showSaveFileScreen(demo, callbackFunction) {
       );
     },
   });
-    const existingFilesContainer = document.createElement('div');
-    existingFilesContainer.className = 'existing-files-container';
-    existingFilesContainer.innerHTML = existingFilesHtml;
+  const existingFilesContainer = document.createElement('div');
+  existingFilesContainer.className = 'existing-files-container';
+  existingFilesContainer.innerHTML = existingFilesHtml;
 
-    const fullScreenModalWrapper = document.querySelector("#dodao-full-screen-modal-wrapper");
-    if (fullScreenModalWrapper) {
-      fullScreenModalWrapper.shadowRoot.querySelector('.full-screen-modal').appendChild(existingFilesContainer);
-    }
+  const fullScreenModalWrapper = document.querySelector("#dodao-full-screen-modal-wrapper");
+  if (fullScreenModalWrapper) {
+    fullScreenModalWrapper.shadowRoot.querySelector('.full-screen-modal').appendChild(existingFilesContainer);
+  }
 }
 
 
 /* Helper Functions */
 
 function createModalForm({
-  title,
-  messageText,
-  inputs,
-  submitButtonText,
-  submitButtonClass,
-  submitButtonHandler,
-  cancelButtonText = "Cancel",
-  cancelButtonClass = "cancel-button",
-  cancelButtonHandler,
-}) {
+                           title,
+                           messageText,
+                           inputs,
+                           submitButtonText,
+                           submitButtonClass,
+                           submitButtonHandler,
+                           cancelButtonText = "Cancel",
+                           cancelButtonClass = "cancel-button",
+                           cancelButtonHandler,
+                         }) {
   const modalElement = createNewModalElement(title);
 
   const formContainer = modalElement;
@@ -799,7 +802,7 @@ function createNewModalElement(
   const fullScreenModalWrapper = document.createElement("div");
   fullScreenModalWrapper.id = "dodao-full-screen-modal-wrapper";
   document.body.appendChild(fullScreenModalWrapper);
-  const shadowRoot = fullScreenModalWrapper.attachShadow({ mode: "open" });
+  const shadowRoot = fullScreenModalWrapper.attachShadow({mode: "open"});
   shadowRoot.appendChild(createModalStyle());
 
   const modalElement = document.createElement("div");

@@ -2,8 +2,16 @@ import html2canvas from "html2canvas";
 
 export async function onMessage(message, sender) {
   if (message.method.endsWith("saveSpaceIdAndApiKey")) {
-    chrome.storage.local.set({ spaceId: message.spaceId, apiKey: message.apiKey })
+    saveSpaceIdAndApiKey(message);
   }
+}
+
+function saveSpaceIdAndApiKey(message) {
+  // Validate if spaceId and apiKey are present in the message
+  // if not then call sendMethodMessage("dodaoContent.captureApiKey", {error: "SpaceId and apiKey are required"});
+  // On the content, we can check if the error is present then show the error message on that page. This pattern can be
+  // used for other error messages as well.
+  chrome.storage.local.set({spaceId: message.spaceId, apiKey: message.apiKey})
 }
 
 export async function dodaoExtensionIconClicked() {
@@ -96,11 +104,11 @@ function getFromStorage(keys) {
   });
 }
 
-function sendMethodMessage(method) {
+function sendMethodMessage(method, data) {
   return new Promise((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) {
-        browser.tabs.sendMessage(tabs[0].id, { method: method }, resolve).then(message => {
+        browser.tabs.sendMessage(tabs[0].id, { method: method, data }, resolve).then(message => {
           console.log(message);
         });
       } else {

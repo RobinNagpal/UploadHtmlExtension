@@ -9,15 +9,20 @@ the changes in the `sherwani/addedScreens` branch to look good before merging it
 # PRs
 
 ### PR 1
-- [ ] Add a method in `dodao-upload.js` called `extensionClicked`. This method should check if the spaceId and
-apiKey are present in the local storage. If they are not present, then it should show a message to the content script.
-`{method: dodaoContent.captureApiKey}`
-- [ ] In `dodao-content.js`, add a message listener `browser.runtime.onMessage.addListener(message => {` just like we have 
-in `content.js` and `content-bootstrap.js`. This should be present at the top of the file. This listener should listen for
-the message `dodaoContent.captureApiKey` and then call another method `showSpaceIdAndApiScreen`. 
-- [ ] In `dodao-content.js`, in method `showSpaceIdAndApiScreen` add logic to show the input fields for spaceId and apiKey
-and once the user enters the values, send a message to the background script to save the values in the local storage.
-`{method: dodaoBackground.saveSpaceIdAndApiKey, spaceId: spaceId, apiKey: apiKey}`
+- [ ] pass everything in a data wrapper except the method. This is try both ways
+- [ ] Add validation and displaying of the logic
+- [ ] remove extra code from extensionIconClicked function
+- [ ] In saveSpaceIdAndApiKey function, if the spaceId, and api key are present then send the message to the content
+{message: 'dodaoContent.selectClickableDemo', data: {spaceId, apiKey}}
+- [ ] Using this message, the content script will show the select clickable demo screen. We already have these screens,
+resuse the exact logic, means call those functions.
+- [ ] When the user selects the clickable demo, then send the message to the background script 
+{ message: 'dodaoBg.saveSelectedClickableDemo', data: { selectedClickableDemo, selectedTidbitCollection }}. We can
+pass the full objects and save the full object in the storage, because we will need the names also.
+- [ ] In the background script, add validations, and send the error, and show the error on UI if there is.
+- [ ] Display of the error can be a common function, which we can include in all screens.
+
+NOTE. Make video with the error scenarios as well. 
 
 ### PR 2
 
