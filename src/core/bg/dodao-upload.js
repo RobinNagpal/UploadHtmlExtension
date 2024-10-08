@@ -1,4 +1,22 @@
 import html2canvas from "html2canvas";
+
+export async function onMessage(message, sender) {
+  if (message.method.endsWith("saveSpaceIdAndApiKey")) {
+    chrome.storage.local.set({ spaceId: message.spaceId, apiKey: message.apiKey })
+  }
+}
+
+export async function dodaoExtensionIconClicked() {
+  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey", "selectedCollectionId", "selectedDemoId"]);
+  if (!spaceId || !apiKey) {
+    sendMethodMessage("dodaoContent.captureApiKey");
+    console.log("Extension icon clicked");
+  }
+  else {
+    console.log("apikey present")
+    return;
+  }
+}
 export async function uploadFileToDodao(
   simulationOptions,
   blob,
@@ -78,6 +96,19 @@ function getFromStorage(keys) {
   });
 }
 
+function sendMethodMessage(method) {
+  return new Promise((resolve) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        browser.tabs.sendMessage(tabs[0].id, { method: method }, resolve).then(message => {
+          console.log(message);
+        });
+      } else {
+        resolve();
+      }
+    });
+  });
+}
 // Helper function to send an error message to the active tab
 function sendErrorMessage(message) {
   return new Promise((resolve) => {

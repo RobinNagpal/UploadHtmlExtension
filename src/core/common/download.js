@@ -116,7 +116,6 @@ async function downloadPage(pageData, options) {
 		S3AccessKey: options.S3AccessKey,
 		S3SecretKey: options.S3SecretKey,
 		saveWithTidbitsHub: options.saveWithTidbitsHub,
-		simulationOptions: options.simulationOptions,
 	};
 	const pingInterval = setInterval(() => {
 		browser.runtime.sendMessage({ method: "ping" }).then(() => { });
@@ -130,9 +129,7 @@ async function downloadPage(pageData, options) {
 			const blobURL = URL.createObjectURL(blob);
 			message.filename = pageData.filename;
 			message.blobURL = blobURL;
-			const apiKey = localStorage.getItem("apiKey");
-			const spaceId = localStorage.getItem("spaceId");
-			const result = await browser.runtime.sendMessage({ ...message, spaceId: spaceId, apiKey: apiKey });
+			const result = await browser.runtime.sendMessage(message);
 			URL.revokeObjectURL(blobURL);
 			if (result.error) {
 				message.embeddedImage = embeddedImage;
@@ -169,10 +166,7 @@ async function downloadPage(pageData, options) {
 				message.filename = pageData.filename = filename;
 				const blobURL = URL.createObjectURL(new Blob([pageData.content], { type: pageData.mimeType }));
 				message.blobURL = blobURL;
-				console.log('message', message);
-				const apiKey = localStorage.getItem("apiKey");
-				const spaceId = localStorage.getItem("spaceId");
-				const result = await browser.runtime.sendMessage({ ...message, spaceId: spaceId, apiKey: apiKey });
+				const result = await browser.runtime.sendMessage(message);
 				URL.revokeObjectURL(blobURL);
 				if (result.error) {
 					message.blobURL = null;
@@ -184,7 +178,6 @@ async function downloadPage(pageData, options) {
 						} else {
 							message.content = pageData.content;
 						}
-
 						await browser.runtime.sendMessage(message);
 					}
 				}

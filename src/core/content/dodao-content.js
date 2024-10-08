@@ -1,4 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
+browser.runtime.onMessage.addListener((message) => { 
+  if (message.method === "dodaoContent.captureApiKey") { 
+    showLoginScreen();
+  }
+});
 export async function takeInputsFromUser(showLogin, callbackFunction) {
     const spaceId = localStorage.getItem("spaceId");
     const apiKey = localStorage.getItem("apiKey");
@@ -74,7 +79,7 @@ function showLoginScreen(callbackFunction) {
         return;
       }
       else {
-        browser.runtime.sendMessage({method:"updateLocalStorage",spaceId:spaceIdInput.value,apiKey:apiKeyInput.value});
+        browser.runtime.sendMessage({method: "dodaoBackground.saveSpaceIdAndApiKey", spaceId: spaceIdInput.value, apiKey: apiKeyInput.value});
         localStorage.setItem("spaceId", spaceIdInput.value);
         localStorage.setItem("apiKey", apiKeyInput.value);
       }

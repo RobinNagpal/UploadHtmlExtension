@@ -27,6 +27,7 @@ import * as config from "./config.js";
 import { autoSaveIsEnabled } from "./autosave-util.js";
 import * as editor from "./editor.js";
 import * as ui from "./../../ui/bg/index.js";
+import { dodaoExtensionIconClicked } from "./dodao-upload.js"
 
 const ERROR_CONNECTION_ERROR_CHROMIUM = "Could not establish connection. Receiving end does not exist.";
 const ERROR_CONNECTION_LOST_CHROMIUM = "The message port closed before a response was received.";
@@ -44,7 +45,7 @@ const CONTENT_SCRIPTS = [
 
 const tasks = [];
 let currentTaskId = 0, maxParallelWorkers, processInForeground;
-ui.init({ isSavingTab, saveTabs, saveUrls, cancelTab, openEditor, saveSelectedLinks, batchSaveUrls });
+ui.init({ isSavingTab, saveTabs, saveUrls, cancelTab, openEditor, saveSelectedLinks, batchSaveUrls, extensionIconClicked });
 
 export {
 	saveTabs,
@@ -58,7 +59,8 @@ export {
 	onSaveEnd,
 	onInit,
 	onTabReplaced,
-	cancelTab as cancel
+	cancelTab as cancel,
+	extensionIconClicked,
 };
 
 async function saveSelectedLinks(tab) {
@@ -100,6 +102,16 @@ async function saveUrls(urls, options = {}) {
 	runTasks();
 }
 
+async function extensionIconClicked(tab) {
+	const tabId = tab.id;
+	const tabOptions = await config.getOptions(tab.url);
+	ui.onStart(tabId, INJECT_SCRIPTS_STEP);
+	await injectScript(tabId, tabOptions);
+	ui.onStart(tabId, EXECUTE_SCRIPTS_STEP);
+
+	await dodaoExtensionIconClicked()
+}
+
 async function saveTabs(tabs, options = {},showLoginScreen) {
 	await initMaxParallelWorkers();
 	await Promise.all(tabs.map(async tab => {
@@ -132,8 +144,7 @@ async function saveTabs(tabs, options = {},showLoginScreen) {
 				addTask({
 					status: TASK_PENDING_STATE,
 					tab: tabData,
-					options: { ...tabOptions ,showLoginScreen:showLoginScreen,},
-					
+					options: tabOptions,
 					method: "content.save"
 				});
 			} else {

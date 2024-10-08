@@ -48,11 +48,6 @@ async function onMessage(message, sender) {
 		ui.onInit(sender.tab);
 		business.onInit(sender.tab);
 		autosave.onInit(sender.tab);
-		toggleSaveTab(sender.tab);
-		
-		function toggleSaveTab(tab) {
-			business.saveTabs([tab], {},false);
-		}
 	}
 	if (message.method.endsWith(".getOptions")) {
 		return config.getOptions(message.url);
@@ -71,31 +66,9 @@ async function onInit(tab, options) {
 	allTabsData[tab.id].savedPageDetected = options.savedPageDetected;
 	await tabsData.set(allTabsData);
 }
-function sendLocalStorageData() {
-	console.log("Sending local storage data to active tab");
-	return new Promise((resolve) => {
-	  // Retrieve all items from local storage
-	  chrome.storage.local.get(null, (items) => {
-		chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-		  if (tabs.length > 0) {
-			// Send the local storage data to the active tab
-			chrome.tabs.sendMessage(tabs[0].id, { localStorageData: items }, (response) => {
-			  // If there is a response from the content script, resolve the promise with that response
-			  resolve(response);
-			});
-		  } else {
-			resolve(); // No active tabs found, resolve without a value
-		  }
-		});
-	  });
-	});
-	console.log("Sending local storage data to active tab");
-  }
-  
-async function onTabUpdated(tabId, changeInfo) {
 
+async function onTabUpdated(tabId, changeInfo) {
 	if (changeInfo.status == "complete") {
-		sendLocalStorageData();
 		setTimeout(async () => {
 			try {
 				await browser.tabs.sendMessage(tabId, { method: "content.maybeInit" });
@@ -116,10 +89,7 @@ async function onTabUpdated(tabId, changeInfo) {
 	if (changeInfo.discarded) {
 		autosave.onTabDiscarded(tabId);
 	}
-
-	
 }
-
 
 function onTabReplaced(addedTabId, removedTabId) {
 	tabsData.onTabReplaced(addedTabId, removedTabId);
