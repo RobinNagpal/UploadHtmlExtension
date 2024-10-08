@@ -38,6 +38,7 @@ import * as tabsData from "./tabs-data.js";
 import * as tabs from "./tabs.js";
 import * as externalMesssages from "./external-messages.js";
 import * as ui from "./../../ui/bg/index.js";
+import * as dodaoBackground from "./dodao-upload.js";
 
 browser.runtime.onMessage.addListener((message, sender) => {
 	console.log("message.method", message.method);
@@ -45,11 +46,8 @@ browser.runtime.onMessage.addListener((message, sender) => {
 	if (message.method.startsWith("tabs.")) {
 		return tabs.onMessage(message, sender);
 	}
-	if (message.method.startsWith("dodaoBackground.saveSpaceIdAndApiKey")) { 
-		if (message.spaceId && message.apiKey) {
-			chrome.storage.local.set({ spaceId: message.spaceId, apiKey: message.apiKey })
-			chrome.storage.local.get()
-		}
+	if (message.method.startsWith("dodaoBackground.")) { 
+		dodaoBackground.onMessage(message, sender);
 	}
 	if (message.method.startsWith("clearLocalStorage")) {
 		const keysToRemove = ['spaceId', 'selectedDemoId', 'apiKey', 'selectedCollectionId'];

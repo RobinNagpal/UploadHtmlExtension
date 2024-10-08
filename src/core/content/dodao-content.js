@@ -1,52 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
 browser.runtime.onMessage.addListener((message) => { 
   if (message.method === "dodaoContent.captureApiKey") { 
-    showSpaceIdAndApiScreen();
+    showLoginScreen();
   }
 });
-function showSpaceIdAndApiScreen() {
-  const inputs = [
-    {
-      className: "space-id-input",
-      placeholder: "Enter your Space ID",
-      styles: {
-        width: "90%",
-        padding: "10px",
-        marginBottom: "10px",
-      },
-    },
-    {
-      className: "api-key-input",
-      placeholder: "Enter your API key from the space settings page:",
-      styles: {
-        width: "90%",
-        padding: "10px",
-        marginBottom: "10px",
-      },
-    },
-  ];
-
-  createModalForm({
-    title: "Login",
-    inputs,
-    submitButtonText: "Submit",
-    submitButtonClass: "submit-button",
-    submitButtonHandler: async () => {
-      const spaceIdInput = inputs[0].element;
-      const apiKeyInput = inputs[1].element;
-      if (!spaceIdInput.value || !apiKeyInput.value) {
-        alert("Please enter both Space ID and API Key.");
-        return;
-      }
-      else {
-        browser.runtime.sendMessage({method: "dodaoBackground.saveSpaceIdAndApiKey", spaceId: spaceIdInput.value, apiKey: apiKeyInput.value});
-        localStorage.setItem("spaceId", spaceIdInput.value);
-        localStorage.setItem("apiKey", apiKeyInput.value);
-      }
-    },
-  });
-
-}
 export async function takeInputsFromUser(showLogin, callbackFunction) {
     const spaceId = localStorage.getItem("spaceId");
     const apiKey = localStorage.getItem("apiKey");
@@ -122,7 +79,7 @@ function showLoginScreen(callbackFunction) {
         return;
       }
       else {
-        browser.runtime.sendMessage({method:"updateLocalStorage",spaceId:spaceIdInput.value,apiKey:apiKeyInput.value});
+        browser.runtime.sendMessage({method: "dodaoBackground.saveSpaceIdAndApiKey", spaceId: spaceIdInput.value, apiKey: apiKeyInput.value});
         localStorage.setItem("spaceId", spaceIdInput.value);
         localStorage.setItem("apiKey", apiKeyInput.value);
       }

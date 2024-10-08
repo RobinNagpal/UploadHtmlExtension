@@ -1,7 +1,11 @@
 import html2canvas from "html2canvas";
+export async function onMessage(message, sender) { 
+  if (message.method.endsWith("saveSpaceIdAndApiKey")) {
+    chrome.storage.local.set({ spaceId: message.spaceId, apiKey: message.apiKey })
+  }
+}
 export async function extensionIconClicked() {
   const { spaceId, apiKey, selecteCollectionId, selectedDemoId } = await getFromStorage(["spaceId", "apiKey", "selectedCollectionId", "selectedDemoId"]);
-  console.log(spaceId,apiKey)
   if (!spaceId || !apiKey) {
     sendMethodMessage("dodaoContent.captureApiKey");
     console.log("Extension icon clicked");

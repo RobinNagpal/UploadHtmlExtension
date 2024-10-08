@@ -95,7 +95,7 @@ function sendLocalStorageData() {
 async function onTabUpdated(tabId, changeInfo) {
 
 	if (changeInfo.status == "complete") {
-		// sendLocalStorageData();
+		sendLocalStorageData();
 		setTimeout(async () => {
 			try {
 				await browser.tabs.sendMessage(tabId, { method: "content.maybeInit" });
