@@ -75,44 +75,8 @@ if (!bootstrap || !bootstrap.initializedSingleFile) {
 
 async function onMessage(message) {
 	if (!location.href.startsWith(MOZ_EXTENSION_PROTOCOL)) {
-		if (message.error) {
-			console.log(message)
-			alert("Failed to upload. Please try again later.")
-		}
-		if (message.success) {
-			console.log(message)
-			alert("File uploaded successfully.")
-			}
 		if (message.method == "content.save") {
-			await takeInputsFromUser(message.options.showLoginScreen,async (simulationOptions) => {
-				// TODO - make sure callback is called after the save and clicked and the user adds the name of the file
-
-				/*
-				- On the bottom bar we display the save button in the green color
-				- When the save button is clicked, We then ask the user for the name of the file.
-				- After we have the name of the file, we can then call this callback which will then do the save page stuff and download the page.
-				- After download, uploading of the file to the server will be done in "src/core/bg/downloads.js"
-				- In "src/core/bg/downloads.js" we will have a else if block for the "saveWithTidbitsHub" option.
-				- We can create another file dodao-upload.js in the "src/core/bg/" folder to handle the uploading of the file to the server.
-				- TODO: We need to see how do we show success to the user after the file is uploaded to the server.
-
-
-
-
-				The simulations options should have the following structure
-				`academy/${spaceId}/${imageType}/${objectId}/${Date.now()}_${name}`,
-					{
-					  fileName: "Step 5 simulation",
-					  objectId: ${"Hyphen-seperated-Clickable-demo-Name"}
-					}
-				*/
-				// in message.options
-				//
-
-				console.log("simulationOptions", simulationOptions);
-
-				await savePage({ ...message, options: { ...message.options, simulationOptions, saveWithTidbitsHub: true}});
-			});
+			await savePage(message);
 			return {};
 		}
 		if (message.method == "content.cancelSave") {
