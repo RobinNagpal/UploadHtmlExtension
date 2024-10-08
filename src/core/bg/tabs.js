@@ -48,11 +48,11 @@ async function onMessage(message, sender) {
 		ui.onInit(sender.tab);
 		business.onInit(sender.tab);
 		autosave.onInit(sender.tab);
-		toggleSaveTab(sender.tab);
+		// toggleSaveTab(sender.tab);
 		
-		function toggleSaveTab(tab) {
-			business.saveTabs([tab], {},false);
-		}
+		// function toggleSaveTab(tab) {
+		// 	business.saveTabs([tab], {},false);
+		// }
 	}
 	if (message.method.endsWith(".getOptions")) {
 		return config.getOptions(message.url);
@@ -95,7 +95,7 @@ function sendLocalStorageData() {
 async function onTabUpdated(tabId, changeInfo) {
 
 	if (changeInfo.status == "complete") {
-		sendLocalStorageData();
+		// sendLocalStorageData();
 		setTimeout(async () => {
 			try {
 				await browser.tabs.sendMessage(tabId, { method: "content.maybeInit" });

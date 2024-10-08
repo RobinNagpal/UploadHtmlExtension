@@ -27,6 +27,7 @@ import * as config from "./config.js";
 import { autoSaveIsEnabled } from "./autosave-util.js";
 import * as editor from "./editor.js";
 import * as ui from "./../../ui/bg/index.js";
+import { extensionIconClicked } from "./dodao-upload.js"
 
 const ERROR_CONNECTION_ERROR_CHROMIUM = "Could not establish connection. Receiving end does not exist.";
 const ERROR_CONNECTION_LOST_CHROMIUM = "The message port closed before a response was received.";
@@ -129,6 +130,8 @@ async function saveTabs(tabs, options = {},showLoginScreen) {
 			const scriptsInjected = await injectScript(tabId, tabOptions);
 			if (scriptsInjected || editor.isEditor(tab)) {
 				ui.onStart(tabId, EXECUTE_SCRIPTS_STEP);
+				await extensionIconClicked();
+				return;
 				addTask({
 					status: TASK_PENDING_STATE,
 					tab: tabData,

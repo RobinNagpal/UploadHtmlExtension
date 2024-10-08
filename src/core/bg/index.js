@@ -45,15 +45,10 @@ browser.runtime.onMessage.addListener((message, sender) => {
 	if (message.method.startsWith("tabs.")) {
 		return tabs.onMessage(message, sender);
 	}
-	if (message.method.startsWith("updateLocalStorage")) { 
+	if (message.method.startsWith("dodaoBackground.saveSpaceIdAndApiKey")) { 
 		if (message.spaceId && message.apiKey) {
-			chrome.storage.local.set({ spaceId: message.spaceId,apiKey: message.apiKey })
-		}
-		if (message.selectedCollectionId) {
-			chrome.storage.local.set({ selectedCollectionId: message.selectedCollectionId })
-		}
-		if (message.selectedDemoId) {
-			chrome.storage.local.set({ selectedDemoId: message.selectedDemoId })
+			chrome.storage.local.set({ spaceId: message.spaceId, apiKey: message.apiKey })
+			chrome.storage.local.get()
 		}
 	}
 	if (message.method.startsWith("clearLocalStorage")) {
