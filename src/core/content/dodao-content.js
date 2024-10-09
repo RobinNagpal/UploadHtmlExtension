@@ -1,50 +1,38 @@
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
+export function init() {}
 
-browser.runtime.onMessage.addListener((message) => {
+browser.runtime.onMessage.addListener(async (message) => {
   if (message.method === "dodaoContent.captureApiKey") {
-    showLoginScreen();
+    showSaveApiKeyAndSpaceIdScreen(message);
+  }
+  if (message.method === "dodaoContent.selectClickableDemo") {
+    console.log("message.data", message.data);
+    showsaveClickableDemoScreen(message);
   }
 });
 
-export async function takeInputsFromUser(showLogin, callbackFunction) {
-  const spaceId = localStorage.getItem("spaceId");
-  const apiKey = localStorage.getItem("apiKey");
-  browser.runtime.onMessage.addListener(message => {
-    if (message.localStorageData) {
-      for (const [key, value] of Object.entries(message.localStorageData)) {
-        // Save the data to local storage
-        localStorage.setItem(key, value);
-        console.log(`Saved ${key}: ${value} to local storage`);
-      }
-      takeInputsFromUser(showLogin, callbackFunction);
-    }
-    if (message.showUI == false) {
-      localStorage.setItem("showUI", false);
-      const fullScreenModalWrapper = document.querySelector("#dodao-full-screen-modal-wrapper");
-      if (fullScreenModalWrapper) {
-        fullScreenModalWrapper.remove();
-      }
-      const bottomBar = document.querySelector("#bottom-bar");
-      if (bottomBar) {
-        bottomBar.remove();
-      }
-    }
-    if (message.showUI == true) {
-      localStorage.setItem("showUI", true);
-
-    }
-
-  });
-  if ((!spaceId || !apiKey) && showLogin) {
-    showLoginScreen(callbackFunction);
-  } else if ((!spaceId || !apiKey) && !showLogin) {
-    return
+function showSaveApiKeyAndSpaceIdScreen(message) {
+  if (message.data) {
+    showLoginScreen();
+    showErrorNotification(message.data.error);
   } else {
-    await showCollectionSelection(spaceId, callbackFunction);
+    showLoginScreen();
   }
 }
 
-function showLoginScreen(callbackFunction) {
+async function showsaveClickableDemoScreen(message) {
+  if (message.data.error) {
+    showErrorNotification(message.data.error);
+    setTimeout(async () => {
+      localStorage.removeItem("selectedDemoId");
+      localStorage.removeItem("selectedCollectionId");
+      await showCollectionSelection(message.data.spaceId);
+    }, 2000); // This delays the function call by 2 seconds
+  }
+  await showCollectionSelection(message.data.spaceId);
+}
+
+function showLoginScreen(message) {
   const inputs = [
     {
       className: "space-id-input",
@@ -68,39 +56,37 @@ function showLoginScreen(callbackFunction) {
 
   createModalForm({
     title: "Login",
+    messageText: message,
     inputs,
     submitButtonText: "Submit",
     submitButtonClass: "submit-button",
     submitButtonHandler: async () => {
       const spaceIdInput = inputs[0].element;
       const apiKeyInput = inputs[1].element;
-      if (!spaceIdInput.value || !apiKeyInput.value) {
-        alert("Please enter both Space ID and API Key.");
-        return;
-      } else {
-        browser.runtime.sendMessage({
-          method: "dodaoBackground.saveSpaceIdAndApiKey",
+
+      browser.runtime.sendMessage({
+        method: "dodaoBackground.saveSpaceIdAndApiKey",
+        data: {
           spaceId: spaceIdInput.value,
-          apiKey: apiKeyInput.value
-        });
-        localStorage.setItem("spaceId", spaceIdInput.value);
-        localStorage.setItem("apiKey", apiKeyInput.value);
-      }
-      await showCollectionSelection(spaceIdInput.value, callbackFunction);
+          apiKey: apiKeyInput.value,
+        },
+      });
+      localStorage.setItem("spaceId", spaceIdInput.value);
+      localStorage.setItem("apiKey", apiKeyInput.value);
     },
   });
 }
 
-async function showCollectionSelection(spaceId, callbackFunction) {
+async function showCollectionSelection(spaceId) {
   const collections = await fetchCollections(spaceId);
   if (collections) {
-    displayCollections(collections, callbackFunction);
+    displayCollections(collections);
   } else {
     displayErrorModal(
       "Failed to fetch collections. Please try again.",
       async () => {
         removeModalElement();
-        await showCollectionSelection(spaceId, callbackFunction);
+        await showCollectionSelection(spaceId);
       }
     );
   }
@@ -122,10 +108,10 @@ async function fetchCollections(spaceId) {
   }
 }
 
-function displayCollections(collections, callbackFunction) {
+function displayCollections(collections, message) {
   const selectedCollectionId = localStorage.getItem("selectedCollectionId");
   if (!selectedCollectionId) {
-    showCollectionList(collections, callbackFunction);
+    showCollectionList(collections, message);
   } else {
     const selectedCollection = collections.find(
       (collection) => collection.id === selectedCollectionId
@@ -134,24 +120,23 @@ function displayCollections(collections, callbackFunction) {
     if (!selectedCollection) {
       console.error("Selected collection not found or does not exist");
       localStorage.removeItem("selectedCollectionId");
-      showCollectionList(collections, callbackFunction);
+      showCollectionList(collections);
     } else {
       removeModalElement();
       const demosInCollection = getDemosFromCollection(selectedCollection);
-      displayDemos(selectedCollection, demosInCollection, callbackFunction);
+      displayDemos(selectedCollection, demosInCollection);
     }
   }
 }
 
-function showCollectionList(collections, callbackFunction) {
+function showCollectionList(collections, message) {
   const collectionModalContent = createNewModalElement();
   const container = createContainer();
-
   const collectionListMessage = createMessageElement(
     collections.length > 0
       ? "Select a Collection from the List Below:"
       : "No collections found. Create a new collection.",
-    {marginBottom: "10px", color: "#FFF"}
+    { marginBottom: "10px", color: "#FFF" }
   );
 
   const collectionList = document.createElement("div");
@@ -159,11 +144,14 @@ function showCollectionList(collections, callbackFunction) {
   collectionList.style.width = "100%";
 
   if (collections.length > 0) {
+    if (message) {
+      showErrorNotification(message);
+    }
     collections.forEach((collection) => {
       const collectionItem = createButton(
         collection.name,
         "collection-item",
-        () => selectCollection(collection, callbackFunction)
+        () => selectCollection(collection)
       );
       collectionList.appendChild(collectionItem);
     });
@@ -180,7 +168,7 @@ function showCollectionList(collections, callbackFunction) {
   const createCollectionButton = createButton(
     "Create a Collection",
     "create-collection-button",
-    () => showCreateCollectionScreen(callbackFunction)
+    () => showCreateCollectionScreen()
   );
 
   container.appendChild(createCollectionMessage);
@@ -195,13 +183,12 @@ function showCollectionList(collections, callbackFunction) {
 function getDemosFromCollection(collection) {
   return collection.items
     .filter(
-      (item) =>
-        item.type === "ClickableDemo" && item.demo && !item.demo.archive
+      (item) => item.type === "ClickableDemo" && item.demo && !item.demo.archive
     )
     .map((item) => item.demo);
 }
 
-function showCreateCollectionScreen(callbackFunction) {
+function showCreateCollectionScreen() {
   const inputs = [
     {
       className: "collection-name-input",
@@ -236,20 +223,14 @@ function showCreateCollectionScreen(callbackFunction) {
       if (name && description) {
         await createCollection(name, description);
         removeModalElement();
-        await showCollectionSelection(
-          localStorage.getItem("spaceId"),
-          callbackFunction
-        );
+        await showCollectionSelection(localStorage.getItem("spaceId"));
       } else {
         alert("Please enter both name and description for the collection.");
       }
     },
     cancelButtonHandler: async () => {
       removeModalElement();
-      await showCollectionSelection(
-        localStorage.getItem("spaceId"),
-        callbackFunction
-      );
+      await showCollectionSelection(localStorage.getItem("spaceId"));
     },
   });
 }
@@ -291,44 +272,42 @@ async function createCollection(name, description) {
   }
 }
 
-async function selectCollection(collection, callbackFunction) {
+async function selectCollection(collection) {
   localStorage.setItem("selectedCollectionId", collection.id);
-  browser.runtime.sendMessage({method: "updateLocalStorage", selectedCollectionId: collection.id});
+  localStorage.setItem("selectedCollection", JSON.stringify(collection));
+  browser.runtime.sendMessage({
+    method: "updateLocalStorage",
+    selectedCollectionId: collection.id,
+  });
   removeModalElement();
-  await showCollectionSelection(
-    localStorage.getItem("spaceId"),
-    callbackFunction
-  );
+  await showCollectionSelection(localStorage.getItem("spaceId"));
 }
 
-function displayDemos(collection, demos, callbackFunction) {
+function displayDemos(collection, demos) {
   if (!demos) {
     displayErrorModal("Failed to fetch demos. Please try again.", async () => {
       removeModalElement();
-      await showCollectionSelection(
-        localStorage.getItem("spaceId"),
-        callbackFunction
-      );
+      await showCollectionSelection(localStorage.getItem("spaceId"));
     });
     return;
   }
 
   const selectedDemoId = localStorage.getItem("selectedDemoId");
   if (!selectedDemoId) {
-    showDemoList(collection, demos, callbackFunction);
+    showDemoList(collection, demos);
   } else {
     const selectedDemo = demos.find((demo) => demo.demoId === selectedDemoId);
     if (!selectedDemo) {
       console.error("Selected demo not found or does not exist");
       localStorage.removeItem("selectedDemoId");
-      showDemoList(collection, demos, callbackFunction);
+      showDemoList(collection, demos);
     } else {
-      setupBottomBarWithDemo(selectedDemo, callbackFunction);
+      setupBottomBarWithDemo(selectedDemo);
     }
   }
 }
 
-function showDemoList(collection, demos, callbackFunction) {
+function showDemoList(collection, demos) {
   const demoModalContent = createNewModalElement();
   const container = createContainer();
 
@@ -336,7 +315,7 @@ function showDemoList(collection, demos, callbackFunction) {
     demos.length > 0
       ? "Select a Demo from the List Below:"
       : "No demos found. Create a new demo.",
-    {marginBottom: "10px", color: "#FFF"}
+    { marginBottom: "10px", color: "#FFF" }
   );
 
   const demoList = document.createElement("div");
@@ -346,7 +325,7 @@ function showDemoList(collection, demos, callbackFunction) {
   if (demos.length > 0) {
     demos.forEach((demo) => {
       const demoItem = createButton(demo.title, "demo-item", () =>
-        selectDemo(demo, callbackFunction)
+        selectDemo(demo)
       );
       demoList.appendChild(demoItem);
     });
@@ -362,7 +341,7 @@ function showDemoList(collection, demos, callbackFunction) {
     "Create a Demo",
     "create-demo-button",
     () => {
-      showCreateDemoScreen(callbackFunction);
+      showCreateDemoScreen();
     }
   );
 
@@ -374,10 +353,10 @@ function showDemoList(collection, demos, callbackFunction) {
   }
 
   demoModalContent.appendChild(container);
-  setupBottomBarForDemos(callbackFunction);
+  setupBottomBarForDemos();
 }
 
-function setupBottomBarForDemos(callbackFunction) {
+function setupBottomBarForDemos() {
   const existingBottomBar = document.getElementById("bottom-bar");
   if (existingBottomBar) existingBottomBar.remove();
 
@@ -388,10 +367,10 @@ function setupBottomBarForDemos(callbackFunction) {
   document.head.appendChild(styleElement);
 
   const logoutButton = createButton("Logout", "logout-button", async () => {
-    browser.runtime.sendMessage({method: "clearLocalStorage"});
+    browser.runtime.sendMessage({ method: "clearLocalStorage" });
     localStorage.clear();
     removeModalElement();
-    showLoginScreen(callbackFunction);
+    showLoginScreen();
   });
   logoutButton.style.marginLeft = "10px";
   logoutButton.style.marginRight = "10px";
@@ -402,10 +381,7 @@ function setupBottomBarForDemos(callbackFunction) {
     "choose-collection-button",
     async () => {
       localStorage.removeItem("selectedCollectionId");
-      await showCollectionSelection(
-        localStorage.getItem("spaceId"),
-        callbackFunction
-      );
+      await showCollectionSelection(localStorage.getItem("spaceId"));
     }
   );
   chooseCollectionButton.style.marginRight = "24px";
@@ -423,7 +399,7 @@ function setupBottomBarForDemos(callbackFunction) {
   fullScreenModal.appendChild(bottomBar);
 }
 
-function setupBottomBarWithDemo(selectedDemo, callbackFunction) {
+function setupBottomBarWithDemo(selectedDemo) {
   const existingModal = document.querySelector(
     "#dodao-full-screen-modal-wrapper"
   );
@@ -438,10 +414,10 @@ function setupBottomBarWithDemo(selectedDemo, callbackFunction) {
   const styleElement = createBottomBarStyle();
   document.head.appendChild(styleElement);
   const logoutButton = createButton("Logout", "logout-button", async () => {
-    browser.runtime.sendMessage({method: "clearLocalStorage"});
+    browser.runtime.sendMessage({ method: "clearLocalStorage" });
     localStorage.clear();
     removeModalElement();
-    showLoginScreen(callbackFunction);
+    showLoginScreen();
   });
   logoutButton.style.marginLeft = "10px";
   logoutButton.style.marginRight = "10px";
@@ -455,7 +431,7 @@ function setupBottomBarWithDemo(selectedDemo, callbackFunction) {
     `Save to ${selectedDemo.title}`,
     "save-button",
     () => {
-      showSaveFileScreen(selectedDemo, callbackFunction);
+      showSaveFileScreen(selectedDemo);
     }
   );
 
@@ -464,10 +440,7 @@ function setupBottomBarWithDemo(selectedDemo, callbackFunction) {
     "choose-another-button",
     async () => {
       localStorage.removeItem("selectedDemoId");
-      await showCollectionSelection(
-        localStorage.getItem("spaceId"),
-        callbackFunction
-      );
+      await showCollectionSelection(localStorage.getItem("spaceId"));
     }
   );
 
@@ -484,7 +457,7 @@ function setupBottomBarWithDemo(selectedDemo, callbackFunction) {
   document.body.appendChild(bottomBar);
 }
 
-function showCreateDemoScreen(callbackFunction) {
+function showCreateDemoScreen() {
   const inputs = [
     {
       className: "demo-name-input",
@@ -519,20 +492,14 @@ function showCreateDemoScreen(callbackFunction) {
       if (name && description) {
         await createDemo(name, description);
         removeModalElement();
-        await showCollectionSelection(
-          localStorage.getItem("spaceId"),
-          callbackFunction
-        );
+        await showCollectionSelection(localStorage.getItem("spaceId"));
       } else {
         alert("Please enter both name and description for the demo.");
       }
     },
     cancelButtonHandler: async () => {
       removeModalElement();
-      await showCollectionSelection(
-        localStorage.getItem("spaceId"),
-        callbackFunction
-      );
+      await showCollectionSelection(localStorage.getItem("spaceId"));
     },
   });
 }
@@ -579,14 +546,19 @@ async function createDemo(title, excerpt) {
   }
 }
 
-async function selectDemo(demo, callbackFunction) {
-  browser.runtime.sendMessage({method: "updateLocalStorage", selectedDemoId: demo.demoId});
+async function selectDemo(demo) {
+  browser.runtime.sendMessage({
+    method: "dodaoBackground.saveSelectedClickableDemo",
+    data: {
+      selectedClickableDemo: demo,
+      selectedTidbitCollection: JSON.parse(
+        localStorage.getItem("selectedCollection")
+      ),
+    },
+  });
   localStorage.setItem("selectedDemoId", demo.demoId);
   removeModalElement();
-  await showCollectionSelection(
-    localStorage.getItem("spaceId"),
-    callbackFunction
-  );
+  await showCollectionSelection(localStorage.getItem("spaceId"));
 }
 
 function addLogoutButton() {
@@ -594,7 +566,7 @@ function addLogoutButton() {
   bottomBar.id = "bottom-bar";
 
   const logoutButton = createButton("Logout", "logout-button", async () => {
-    browser.runtime.sendMessage({method: "clearLocalStorage"});
+    browser.runtime.sendMessage({ method: "clearLocalStorage" });
     localStorage.clear();
     removeModalElement();
     showLoginScreen();
@@ -612,7 +584,7 @@ function addLogoutButton() {
   fullScreenModal.appendChild(bottomBar);
 }
 
-async function showSaveFileScreen(demo, callbackFunction) {
+async function showSaveFileScreen(demo) {
   const spaceId = localStorage.getItem("spaceId");
   const demoId = demo.demoId;
   const apiKey = localStorage.getItem("apiKey");
@@ -620,10 +592,10 @@ async function showSaveFileScreen(demo, callbackFunction) {
   let existingFiles = [];
   try {
     const response = await fetch(apiUrl, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
-        'X-API-KEY': apiKey,
+        "Content-Type": "application/json",
+        "X-API-KEY": apiKey,
       },
     });
 
@@ -642,11 +614,15 @@ async function showSaveFileScreen(demo, callbackFunction) {
         </tr>
       </thead>
       <tbody>
-        ${existingFiles.map(file => `
+        ${existingFiles
+          .map(
+            (file) => `
           <tr>
             <td>${file.fileName}</td>
           </tr>
-        `).join('')}
+        `
+          )
+          .join("")}
       </tbody>
     </table>
   `;
@@ -659,7 +635,7 @@ async function showSaveFileScreen(demo, callbackFunction) {
         width: "90%",
         marginBottom: "10px",
       },
-    }
+    },
   ];
 
   createModalForm({
@@ -675,60 +651,63 @@ async function showSaveFileScreen(demo, callbackFunction) {
           objectId: demo.title.replace(/\s+/g, "-"),
           demoId: demo.demoId,
         };
-        const fullScreenModalWrapper = document.querySelector("#dodao-full-screen-modal-wrapper");
+        const fullScreenModalWrapper = document.querySelector(
+          "#dodao-full-screen-modal-wrapper"
+        );
         const bottomBar = document.querySelector("#bottom-bar");
         if (fullScreenModalWrapper) fullScreenModalWrapper.remove();
         if (bottomBar) bottomBar.remove();
-        await callbackFunction(simulationOptions);
-        await takeInputsFromUser(false, callbackFunction);
+        await simulationOptions;
       } else {
         alert("Please enter a file name to save the file.");
       }
     },
     cancelButtonHandler: async () => {
       removeModalElement();
-      await showCollectionSelection(
-        localStorage.getItem("spaceId"),
-        callbackFunction
-      );
+      await showCollectionSelection(localStorage.getItem("spaceId"));
     },
   });
-  const existingFilesContainer = document.createElement('div');
-  existingFilesContainer.className = 'existing-files-container';
+  const existingFilesContainer = document.createElement("div");
+  existingFilesContainer.className = "existing-files-container";
   existingFilesContainer.innerHTML = existingFilesHtml;
 
-  const fullScreenModalWrapper = document.querySelector("#dodao-full-screen-modal-wrapper");
+  const fullScreenModalWrapper = document.querySelector(
+    "#dodao-full-screen-modal-wrapper"
+  );
   if (fullScreenModalWrapper) {
-    fullScreenModalWrapper.shadowRoot.querySelector('.full-screen-modal').appendChild(existingFilesContainer);
+    fullScreenModalWrapper.shadowRoot
+      .querySelector(".full-screen-modal")
+      .appendChild(existingFilesContainer);
   }
 }
-
 
 /* Helper Functions */
 
 function createModalForm({
-                           title,
-                           messageText,
-                           inputs,
-                           submitButtonText,
-                           submitButtonClass,
-                           submitButtonHandler,
-                           cancelButtonText = "Cancel",
-                           cancelButtonClass = "cancel-button",
-                           cancelButtonHandler,
-                         }) {
+  title,
+  messageText,
+  inputs,
+  submitButtonText,
+  submitButtonClass,
+  submitButtonHandler,
+  cancelButtonText = "Cancel",
+  cancelButtonClass = "cancel-button",
+  cancelButtonHandler,
+}) {
+  // Create the modal element and container for the form
   const modalElement = createNewModalElement(title);
-
   const formContainer = modalElement;
 
+  // If messageText is provided, create and append the message element
   if (messageText) {
     const messageElement = createMessageElement(messageText, {
       marginBottom: "10px",
-      color: "#FFF",
+      color: "#FFF", // Customize the text color if needed
     });
     formContainer.appendChild(messageElement);
   }
 
+  // Create and append each input element based on the provided configuration
   inputs.forEach((inputConfig) => {
     const inputElement = createInputElement(
       inputConfig.type || "text",
@@ -737,9 +716,11 @@ function createModalForm({
       inputConfig.styles || {}
     );
     formContainer.appendChild(inputElement);
+    // Store the input element reference inside the inputConfig object
     inputConfig.element = inputElement;
   });
 
+  // Create the submit button
   const submitButton = createButton(
     submitButtonText,
     submitButtonClass,
@@ -750,6 +731,7 @@ function createModalForm({
 
   let buttons = [submitButton];
 
+  // If a cancel button is required, create and append it
   if (cancelButtonHandler) {
     const cancelButton = createButton(
       cancelButtonText,
@@ -761,9 +743,11 @@ function createModalForm({
     buttons.push(cancelButton);
   }
 
+  // Create a container for buttons and append it to the form
   const buttonContainer = createButtonContainer(buttons);
   formContainer.appendChild(buttonContainer);
 
+  // Return the input elements for external handling
   return inputs;
 }
 
@@ -802,7 +786,7 @@ function createNewModalElement(
   const fullScreenModalWrapper = document.createElement("div");
   fullScreenModalWrapper.id = "dodao-full-screen-modal-wrapper";
   document.body.appendChild(fullScreenModalWrapper);
-  const shadowRoot = fullScreenModalWrapper.attachShadow({mode: "open"});
+  const shadowRoot = fullScreenModalWrapper.attachShadow({ mode: "open" });
   shadowRoot.appendChild(createModalStyle());
 
   const modalElement = document.createElement("div");
@@ -825,6 +809,23 @@ function createNewModalElement(
 function createModalStyle() {
   const styleElement = document.createElement("style");
   styleElement.textContent = `
+        .notification {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 9999; /* High z-index for visibility */
+          background-color: #f44336; /* Red background for errors */
+          color: white;
+          padding: 15px;
+          border-radius: 5px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          opacity: 0;
+          transition: opacity 0.5s ease-in-out;
+      }
+
+      .notification.show {
+          opacity: 1;
+      }
     .full-screen-modal, .full-screen-modal * {
       font-family: Arial, sans-serif;
     }
@@ -1075,4 +1076,70 @@ function createNewEntityId(entityName, spaceId) {
   return `${slugify(entityName)}-${normalizedSpaceId}-${uuidv4()
     .toString()
     .substring(0, 4)}`;
+}
+
+function showErrorNotification(errorMessage) {
+  // Create a style element to hold the CSS
+  const style = document.createElement("style");
+  style.innerHTML = `
+      .notification {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 9999; /* High z-index for visibility */
+          background-color: #f44336; /* Red background for errors */
+          color: white;
+          padding: 15px;
+          border-radius: 5px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          opacity: 0;
+          transition: opacity 0.5s ease-in-out;
+      }
+
+      .notification.show {
+          opacity: 1;
+      }
+  `;
+
+  // Append the style element to the head
+  document.head.appendChild(style);
+
+  // Create the notification element
+  const notification = document.createElement("div");
+  notification.className = "notification";
+  notification.innerText = errorMessage;
+
+  // Append to body
+  const modalWrapper = document.querySelector(
+    "#dodao-full-screen-modal-wrapper"
+  );
+  if (modalWrapper) {
+    modalWrapper.shadowRoot
+      .querySelector(".full-screen-modal")
+      .appendChild(notification);
+  } else {
+    document.body.appendChild(notification);
+  }
+
+  // Add the show class to fade in the notification
+  setTimeout(() => {
+    notification.classList.add("show");
+  }, 10);
+
+  // Remove the notification after 5 seconds
+  setTimeout(() => {
+    notification.classList.remove("show");
+    // Remove from DOM after the transition
+    if (modalWrapper) {
+      setTimeout(() => {
+        modalWrapper.shadowRoot
+          .querySelector(".full-screen-modal")
+          .removeChild(notification);
+      }, 500);
+    } else {
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 500);
+    }
+  }, 5000); // Duration to display the notification
 }

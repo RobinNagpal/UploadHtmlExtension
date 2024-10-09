@@ -28,8 +28,7 @@ import { fetch, frameFetch } from "./../../lib/single-file/fetch/content/content
 import * as ui from "./../../ui/content/content-ui.js";
 import { onError, getOpenFileBar, openFile, setLabels } from "./../../ui/common/common-content-ui.js";
 import * as yabson from "./../../lib/yabson/yabson.js";
-import {takeInputsFromUser} from "./dodao-content.js";
-
+import * as dodaoContent from "./dodao-content.js"
 const singlefile = globalThis.singlefile;
 const bootstrap = globalThis.singlefileBootstrap;
 
@@ -40,7 +39,7 @@ const SHARE_SELECTION_BUTTON_MESSAGE = browser.i18n.getMessage("topPanelShareSel
 const ERROR_TITLE_MESSAGE = browser.i18n.getMessage("topPanelError");
 
 let processor, processing, downloadParser, openFileInfobar, scrollY, transform, overflow;
-
+dodaoContent.init();
 setLabels({
 	EMBEDDED_IMAGE_BUTTON_MESSAGE,
 	SHARE_PAGE_BUTTON_MESSAGE,
