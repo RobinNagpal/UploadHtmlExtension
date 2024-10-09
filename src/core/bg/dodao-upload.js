@@ -9,6 +9,20 @@ export async function onMessage(message, sender) {
   }
 }
 
+export async function dodaoExtensionIconClicked() {
+  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
+  if (!spaceId || !apiKey) {
+    sendMethodMessage("dodaoContent.captureApiKey");
+  } else {
+    sendMethodMessage("dodaoContent.selectClickableDemo", {
+      spaceId: spaceId,
+      apiKey: apiKey,
+    });
+    return;
+  }
+}
+
+
 function saveSpaceIdAndApiKey(message) {
   if (message.data.spaceId && message.data.apiKey) {
     chrome.storage.local.set({
@@ -44,18 +58,7 @@ async function saveSelectedCollectionAndDemoId(message) {
     });
   }
 }
-export async function dodaoExtensionIconClicked() {
-  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
-  if (!spaceId || !apiKey) {
-    sendMethodMessage("dodaoContent.captureApiKey");
-  } else {
-    sendMethodMessage("dodaoContent.selectClickableDemo", {
-      spaceId: spaceId,
-      apiKey: apiKey,
-    });
-    return;
-  }
-}
+
 export async function uploadFileToDodao(
   simulationOptions,
   blob,
