@@ -17,6 +17,15 @@ browser.runtime.onMessage.addListener(async (message) => {
       message.data.apiKey
     );
   }
+  if (message.method === "dodaoContent.captureScreenHtml") {
+    console.log(message);
+    captureScreenHtml(
+      message.data.selectedClickableDemo,
+      message.data.selectedTidbitCollection,
+      message.data.spaceId,
+      message.data.apiKey
+    );
+  }
 });
 
 function showSaveApiKeyAndSpaceIdScreen(message) {
@@ -401,6 +410,13 @@ function setupBottomBarForDemos(spaceId, apiKey) {
   fullScreenModal.appendChild(bottomBar);
 }
 
+function captureScreenHtml(
+  selectedDemo,
+  selectedTidbitCollection,
+  spaceId,
+  apiKey
+) {
+}
 function setupBottomBarWithDemo(
   selectedDemo,
   selectedTidbitCollection,
@@ -434,7 +450,7 @@ function setupBottomBarWithDemo(
   logoutButton.style.width = "10%";
 
   const demoTitle = document.createElement("span");
-  demoTitle.id = "demo-name";
+  demoTitle.id = selectedDemo.id;
   demoTitle.textContent = `Selected Demo: ${selectedDemo.title}`;
 
   const saveButton = createButton(
@@ -442,7 +458,7 @@ function setupBottomBarWithDemo(
     "save-button",
     () => {
       browser.runtime.sendMessage({
-        method: "dodaoBackground.savePage",
+        method: "dodaoBackground.captureScreenClicked",
       });
       showSaveFileScreen(selectedDemo, spaceId, apiKey);
     }

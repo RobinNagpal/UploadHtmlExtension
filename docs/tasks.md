@@ -17,6 +17,13 @@ the changes in the `sherwani/addedScreens` branch to look good before merging it
 - [x] When the bottom bar capture is clicked send a message to bg script to start downloading the page. This can then call the
 existing code of save tab
 
+After Rendering bottom bar there are three flows possible:
+1) Logout - Send a message to the bg script to logout {method: dodaoBg.logout}
+2) Capture Page - Send a message to the bg script to save the page {method: dodaoBg.captureScreenClicked}
+3) Change Selected Demo - Send a message to the bg script to change the selected demo {method: dodaoBg.changeSelectedDemo}. This will 
+clear the selected collection and demo from the storage and send back the message to the content script to selectClickableDemo  
+
+
 ### PR 2
 
  
