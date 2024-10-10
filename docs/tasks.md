@@ -9,12 +9,12 @@ the changes in the `sherwani/addedScreens` branch to look good before merging it
 # PRs
 
 ### PR 1
-- [ ] In `dodaoExtensionIconClicked` in the else block, which is when we have all the data, we need to call the
+- [x] In `dodaoExtensionIconClicked` in the else block, which is when we have all the data, we need to call the
 `sendMethodMessage("dodaoContent.renderBottomBar")`
-- [ ] In `saveSelectedCollectionAndDemoId` also on successful save, we call `sendMethodMessage("dodaoContent.renderBottomBar")`
-- [ ] When sending this message, we send all the four pieces of data we have to the content script
-- [ ] We write a corresponding method in content script which uses the existing code to shw the bottom bar
-- [ ] When the bottom bar capture is clicked send a message to bg script to start downloading the page. This can then call the
+- [x] In `saveSelectedCollectionAndDemoId` also on successful save, we call `sendMethodMessage("dodaoContent.renderBottomBar")`
+- [x] When sending this message, we send all the four pieces of data we have to the content script
+- [x] We write a corresponding method in content script which uses the existing code to shw the bottom bar
+- [x] When the bottom bar capture is clicked send a message to bg script to start downloading the page. This can then call the
 existing code of save tab
 
 ### PR 2
