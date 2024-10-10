@@ -1,5 +1,9 @@
 import html2canvas from "html2canvas";
 
+let business;
+export function init(businessApi) {
+  business = businessApi;
+}
 export async function onMessage(message, sender) {
   if (message.method.endsWith("saveSpaceIdAndApiKey")) {
     saveSpaceIdAndApiKey(message);
@@ -7,22 +11,44 @@ export async function onMessage(message, sender) {
   if (message.method.endsWith("saveSelectedClickableDemo")) {
     saveSelectedCollectionAndDemoId(message);
   }
+  if (message.method.endsWith("savePage")) {
+    savePage();
+  }
 }
 
 export async function dodaoExtensionIconClicked() {
-  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
+    await getFromStorage([
+      "spaceId",
+      "apiKey",
+      "selectedClickableDemo",
+      "selectedTidbitCollection",
+    ]);
   if (!spaceId || !apiKey) {
     sendMethodMessage("dodaoContent.captureApiKey");
-  } else {
+  } else if (!selectedClickableDemo || !selectedTidbitCollection) {
     sendMethodMessage("dodaoContent.selectClickableDemo", {
       spaceId: spaceId,
       apiKey: apiKey,
     });
-    return;
+  } else if (
+    spaceId &&
+    apiKey &&
+    selectedClickableDemo &&
+    selectedTidbitCollection
+  ) {
+    sendMethodMessage("dodaoContent.renderBottomBar", {
+      spaceId,
+      apiKey,
+      selectedClickableDemo,
+      selectedTidbitCollection,
+    });
   }
 }
 
-
+function savePage() {
+  business.saveTabs([sender.tab], {}, true);
+}
 function saveSpaceIdAndApiKey(message) {
   if (message.data.spaceId && message.data.apiKey) {
     chrome.storage.local.set({
@@ -41,6 +67,7 @@ function saveSpaceIdAndApiKey(message) {
 }
 
 async function saveSelectedCollectionAndDemoId(message) {
+  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
   if (
     message.data.selectedTidbitCollection &&
     message.data.selectedClickableDemo
@@ -49,8 +76,13 @@ async function saveSelectedCollectionAndDemoId(message) {
       selectedTidbitCollection: message.data.selectedTidbitCollection,
       selectedClickableDemo: message.data.selectedClickableDemo,
     });
+    sendMethodMessage("dodaoContent.renderBottomBar", {
+      selectedClickableDemo: message.data.selectedClickableDemo,
+      selectedTidbitCollection: message.data.selectedTidbitCollection,
+      spaceId,
+      apiKey,
+    });
   } else {
-    const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
     sendMethodMessage("dodaoContent.selectClickableDemo", {
       spaceId: spaceId,
       apiKey: apiKey,

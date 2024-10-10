@@ -115,7 +115,7 @@ async function downloadPage(pageData, options) {
 		S3Bucket: options.S3Bucket,
 		S3AccessKey: options.S3AccessKey,
 		S3SecretKey: options.S3SecretKey,
-		saveWithTidbitsHub: options.saveWithTidbitsHub,
+		// saveWithTidbitsHub: options.saveWithTidbitsHub,
 	};
 	const pingInterval = setInterval(() => {
 		browser.runtime.sendMessage({ method: "ping" }).then(() => { });
