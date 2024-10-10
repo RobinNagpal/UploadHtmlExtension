@@ -6,8 +6,25 @@ browser.runtime.onMessage.addListener(async (message) => {
     showSaveApiKeyAndSpaceIdScreen(message);
   }
   if (message.method === "dodaoContent.selectClickableDemo") {
-    console.log("message.data", message.data);
     showsaveClickableDemoScreen(message);
+  }
+  if (message.method === "dodaoContent.renderBottomBar") {
+    console.log(message);
+    setupBottomBarWithDemo(
+      message.data.selectedClickableDemo,
+      message.data.selectedTidbitCollection,
+      message.data.spaceId,
+      message.data.apiKey
+    );
+  }
+  if (message.method === "dodaoContent.captureScreenHtml") {
+    console.log(message);
+    captureScreenHtml(
+      message.data.selectedClickableDemo,
+      message.data.selectedTidbitCollection,
+      message.data.spaceId,
+      message.data.apiKey
+    );
   }
 });
 
@@ -26,10 +43,10 @@ async function showsaveClickableDemoScreen(message) {
     setTimeout(async () => {
       localStorage.removeItem("selectedDemoId");
       localStorage.removeItem("selectedCollectionId");
-      await showCollectionSelection(message.data.spaceId);
+      await showCollectionSelection(message.data.spaceId, message.data.apiKey);
     }, 2000); // This delays the function call by 2 seconds
   }
-  await showCollectionSelection(message.data.spaceId);
+  await showCollectionSelection(message.data.spaceId, message.data.apiKey);
 }
 
 function showLoginScreen(message) {
@@ -77,16 +94,18 @@ function showLoginScreen(message) {
   });
 }
 
-async function showCollectionSelection(spaceId) {
+async function showCollectionSelection(spaceId, apiKey) {
+  console.log(spaceId);
   const collections = await fetchCollections(spaceId);
+  console.log(collections);
   if (collections) {
-    displayCollections(collections);
+    displayCollections(collections, spaceId, apiKey);
   } else {
     displayErrorModal(
       "Failed to fetch collections. Please try again.",
       async () => {
         removeModalElement();
-        await showCollectionSelection(spaceId);
+        await showCollectionSelection(spaceId, apiKey);
       }
     );
   }
@@ -108,28 +127,30 @@ async function fetchCollections(spaceId) {
   }
 }
 
-function displayCollections(collections, message) {
+function displayCollections(collections, spaceId, apiKey) {
   const selectedCollectionId = localStorage.getItem("selectedCollectionId");
+  console.log(selectedCollectionId);
+  console.log(collections);
   if (!selectedCollectionId) {
-    showCollectionList(collections, message);
+    showCollectionList(collections, spaceId, apiKey);
   } else {
     const selectedCollection = collections.find(
       (collection) => collection.id === selectedCollectionId
     );
-
+    console.log(collections, selectedCollection);
     if (!selectedCollection) {
       console.error("Selected collection not found or does not exist");
       localStorage.removeItem("selectedCollectionId");
-      showCollectionList(collections);
+      showCollectionList(collections, spaceId, apiKey);
     } else {
       removeModalElement();
       const demosInCollection = getDemosFromCollection(selectedCollection);
-      displayDemos(selectedCollection, demosInCollection);
+      displayDemos(selectedCollection, demosInCollection, spaceId, apiKey);
     }
   }
 }
 
-function showCollectionList(collections, message) {
+function showCollectionList(collections, spaceId, apiKey) {
   const collectionModalContent = createNewModalElement();
   const container = createContainer();
   const collectionListMessage = createMessageElement(
@@ -144,14 +165,11 @@ function showCollectionList(collections, message) {
   collectionList.style.width = "100%";
 
   if (collections.length > 0) {
-    if (message) {
-      showErrorNotification(message);
-    }
     collections.forEach((collection) => {
       const collectionItem = createButton(
         collection.name,
         "collection-item",
-        () => selectCollection(collection)
+        () => selectCollection(collection, spaceId, apiKey)
       );
       collectionList.appendChild(collectionItem);
     });
@@ -168,7 +186,7 @@ function showCollectionList(collections, message) {
   const createCollectionButton = createButton(
     "Create a Collection",
     "create-collection-button",
-    () => showCreateCollectionScreen()
+    () => showCreateCollectionScreen(spaceId, apiKey)
   );
 
   container.appendChild(createCollectionMessage);
@@ -188,7 +206,7 @@ function getDemosFromCollection(collection) {
     .map((item) => item.demo);
 }
 
-function showCreateCollectionScreen() {
+function showCreateCollectionScreen(spaceId, apiKey) {
   const inputs = [
     {
       className: "collection-name-input",
@@ -221,24 +239,21 @@ function showCreateCollectionScreen() {
       const name = nameInput.value;
       const description = descriptionInput.value;
       if (name && description) {
-        await createCollection(name, description);
+        await createCollection(name, description, spaceId, apiKey);
         removeModalElement();
-        await showCollectionSelection(localStorage.getItem("spaceId"));
+        await showCollectionSelection(spaceId, apiKey);
       } else {
         alert("Please enter both name and description for the collection.");
       }
     },
     cancelButtonHandler: async () => {
       removeModalElement();
-      await showCollectionSelection(localStorage.getItem("spaceId"));
+      await showCollectionSelection(spaceId, apiKey);
     },
   });
 }
 
-async function createCollection(name, description) {
-  const spaceId = localStorage.getItem("spaceId");
-  const apiKey = localStorage.getItem("apiKey");
-
+async function createCollection(name, description, spaceId, apiKey) {
   try {
     const response = await fetch(
       `http://localhost:3000/api/${spaceId}/byte-collections`,
@@ -272,42 +287,38 @@ async function createCollection(name, description) {
   }
 }
 
-async function selectCollection(collection) {
+async function selectCollection(collection, spaceId, apiKey) {
   localStorage.setItem("selectedCollectionId", collection.id);
   localStorage.setItem("selectedCollection", JSON.stringify(collection));
-  browser.runtime.sendMessage({
-    method: "updateLocalStorage",
-    selectedCollectionId: collection.id,
-  });
   removeModalElement();
-  await showCollectionSelection(localStorage.getItem("spaceId"));
+  await showCollectionSelection(spaceId, apiKey);
 }
 
-function displayDemos(collection, demos) {
+function displayDemos(collection, demos, spaceId, apiKey) {
   if (!demos) {
     displayErrorModal("Failed to fetch demos. Please try again.", async () => {
       removeModalElement();
-      await showCollectionSelection(localStorage.getItem("spaceId"));
+      await showCollectionSelection(spaceId, apiKey);
     });
     return;
   }
 
   const selectedDemoId = localStorage.getItem("selectedDemoId");
   if (!selectedDemoId) {
-    showDemoList(collection, demos);
+    showDemoList(collection, demos, spaceId, apiKey);
   } else {
     const selectedDemo = demos.find((demo) => demo.demoId === selectedDemoId);
     if (!selectedDemo) {
       console.error("Selected demo not found or does not exist");
       localStorage.removeItem("selectedDemoId");
-      showDemoList(collection, demos);
+      showDemoList(collection, demos, spaceId, apiKey);
     } else {
-      setupBottomBarWithDemo(selectedDemo);
+      // setupBottomBarWithDemo(selectedDemo);
     }
   }
 }
 
-function showDemoList(collection, demos) {
+function showDemoList(collection, demos, spaceId, apiKey) {
   const demoModalContent = createNewModalElement();
   const container = createContainer();
 
@@ -325,7 +336,7 @@ function showDemoList(collection, demos) {
   if (demos.length > 0) {
     demos.forEach((demo) => {
       const demoItem = createButton(demo.title, "demo-item", () =>
-        selectDemo(demo)
+        selectDemo(demo, spaceId, apiKey)
       );
       demoList.appendChild(demoItem);
     });
@@ -341,7 +352,7 @@ function showDemoList(collection, demos) {
     "Create a Demo",
     "create-demo-button",
     () => {
-      showCreateDemoScreen();
+      showCreateDemoScreen(spaceId, apiKey);
     }
   );
 
@@ -353,10 +364,10 @@ function showDemoList(collection, demos) {
   }
 
   demoModalContent.appendChild(container);
-  setupBottomBarForDemos();
+  setupBottomBarForDemos(spaceId, apiKey);
 }
 
-function setupBottomBarForDemos() {
+function setupBottomBarForDemos(spaceId, apiKey) {
   const existingBottomBar = document.getElementById("bottom-bar");
   if (existingBottomBar) existingBottomBar.remove();
 
@@ -381,7 +392,7 @@ function setupBottomBarForDemos() {
     "choose-collection-button",
     async () => {
       localStorage.removeItem("selectedCollectionId");
-      await showCollectionSelection(localStorage.getItem("spaceId"));
+      await showCollectionSelection(spaceId, apiKey);
     }
   );
   chooseCollectionButton.style.marginRight = "24px";
@@ -399,7 +410,22 @@ function setupBottomBarForDemos() {
   fullScreenModal.appendChild(bottomBar);
 }
 
-function setupBottomBarWithDemo(selectedDemo) {
+function captureScreenHtml(
+  selectedDemo,
+  selectedTidbitCollection,
+  spaceId,
+  apiKey
+) {
+}
+function setupBottomBarWithDemo(
+  selectedDemo,
+  selectedTidbitCollection,
+  spaceId,
+  apiKey
+) {
+  console.log(selectedDemo, selectedTidbitCollection, spaceId, apiKey);
+  localStorage.setItem("selectedDemoId", selectedDemo.demoId);
+  localStorage.setItem("selectedCollectionId", selectedTidbitCollection.id);
   const existingModal = document.querySelector(
     "#dodao-full-screen-modal-wrapper"
   );
@@ -424,14 +450,17 @@ function setupBottomBarWithDemo(selectedDemo) {
   logoutButton.style.width = "10%";
 
   const demoTitle = document.createElement("span");
-  demoTitle.id = "demo-name";
+  demoTitle.id = selectedDemo.id;
   demoTitle.textContent = `Selected Demo: ${selectedDemo.title}`;
 
   const saveButton = createButton(
     `Save to ${selectedDemo.title}`,
     "save-button",
     () => {
-      showSaveFileScreen(selectedDemo);
+      browser.runtime.sendMessage({
+        method: "dodaoBackground.captureScreenClicked",
+      });
+      showSaveFileScreen(selectedDemo, spaceId, apiKey);
     }
   );
 
@@ -440,7 +469,7 @@ function setupBottomBarWithDemo(selectedDemo) {
     "choose-another-button",
     async () => {
       localStorage.removeItem("selectedDemoId");
-      await showCollectionSelection(localStorage.getItem("spaceId"));
+      await showCollectionSelection(spaceId, apiKey);
     }
   );
 
@@ -457,7 +486,7 @@ function setupBottomBarWithDemo(selectedDemo) {
   document.body.appendChild(bottomBar);
 }
 
-function showCreateDemoScreen() {
+function showCreateDemoScreen(spaceId, apiKey) {
   const inputs = [
     {
       className: "demo-name-input",
@@ -490,23 +519,21 @@ function showCreateDemoScreen() {
       const name = nameInput.value;
       const description = descriptionInput.value;
       if (name && description) {
-        await createDemo(name, description);
+        await createDemo(name, description, spaceId, apiKey);
         removeModalElement();
-        await showCollectionSelection(localStorage.getItem("spaceId"));
+        await showCollectionSelection(spaceId, apiKey);
       } else {
         alert("Please enter both name and description for the demo.");
       }
     },
     cancelButtonHandler: async () => {
       removeModalElement();
-      await showCollectionSelection(localStorage.getItem("spaceId"));
+      await showCollectionSelection(spaceId, apiKey);
     },
   });
 }
 
-async function createDemo(title, excerpt) {
-  const spaceId = localStorage.getItem("spaceId");
-  const apiKey = localStorage.getItem("apiKey");
+async function createDemo(title, excerpt, spaceId, apiKey) {
   const input = {
     title,
     excerpt,
@@ -546,7 +573,7 @@ async function createDemo(title, excerpt) {
   }
 }
 
-async function selectDemo(demo) {
+async function selectDemo(demo, spaceId, apiKey) {
   browser.runtime.sendMessage({
     method: "dodaoBackground.saveSelectedClickableDemo",
     data: {
@@ -557,8 +584,8 @@ async function selectDemo(demo) {
     },
   });
   localStorage.setItem("selectedDemoId", demo.demoId);
-  removeModalElement();
-  await showCollectionSelection(localStorage.getItem("spaceId"));
+  // removeModalElement();
+  // await showCollectionSelection(spaceId,apiKey);
 }
 
 function addLogoutButton() {
@@ -584,10 +611,8 @@ function addLogoutButton() {
   fullScreenModal.appendChild(bottomBar);
 }
 
-async function showSaveFileScreen(demo) {
-  const spaceId = localStorage.getItem("spaceId");
+async function showSaveFileScreen(demo, spaceId, apiKey) {
   const demoId = demo.demoId;
-  const apiKey = localStorage.getItem("apiKey");
   const apiUrl = `http://localhost:3000/api/${spaceId}/html-captures/${demoId}`;
   let existingFiles = [];
   try {
@@ -657,14 +682,13 @@ async function showSaveFileScreen(demo) {
         const bottomBar = document.querySelector("#bottom-bar");
         if (fullScreenModalWrapper) fullScreenModalWrapper.remove();
         if (bottomBar) bottomBar.remove();
-        await simulationOptions;
       } else {
         alert("Please enter a file name to save the file.");
       }
     },
     cancelButtonHandler: async () => {
       removeModalElement();
-      await showCollectionSelection(localStorage.getItem("spaceId"));
+      await showCollectionSelection(spaceId, apiKey);
     },
   });
   const existingFilesContainer = document.createElement("div");

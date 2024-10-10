@@ -174,7 +174,6 @@ async function savePage(message) {
 			processing = true;
 			try {
 				const pageData = await processPage(options);
-				pageData.filename=message.options.simulationOptions.fileName;
 				if (pageData) {
 					await download.downloadPage(pageData, options);
 				}

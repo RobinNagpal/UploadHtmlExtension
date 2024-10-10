@@ -1,5 +1,11 @@
 import html2canvas from "html2canvas";
 
+let business;
+
+export function init(businessApi) {
+  business = businessApi;
+}
+
 export async function onMessage(message, sender) {
   if (message.method.endsWith("saveSpaceIdAndApiKey")) {
     saveSpaceIdAndApiKey(message);
@@ -7,19 +13,64 @@ export async function onMessage(message, sender) {
   if (message.method.endsWith("saveSelectedClickableDemo")) {
     saveSelectedCollectionAndDemoId(message);
   }
+  if (message.method.endsWith("captureScreenClicked")) {
+    captureScreenClicked();
+  }
+  if (message.method.endsWith("savePage")) {
+    savePage(sender);
+  }
 }
 
 export async function dodaoExtensionIconClicked() {
-  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
+  const {spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection} =
+    await getFromStorage([
+      "spaceId",
+      "apiKey",
+      "selectedClickableDemo",
+      "selectedTidbitCollection",
+    ]);
   if (!spaceId || !apiKey) {
     sendMethodMessage("dodaoContent.captureApiKey");
-  } else {
+  } else if (!selectedClickableDemo || !selectedTidbitCollection) {
     sendMethodMessage("dodaoContent.selectClickableDemo", {
       spaceId: spaceId,
       apiKey: apiKey,
     });
-    return;
+  } else if (
+    spaceId &&
+    apiKey &&
+    selectedClickableDemo &&
+    selectedTidbitCollection
+  ) {
+    sendMethodMessage("dodaoContent.renderBottomBar", {
+      spaceId,
+      apiKey,
+      selectedClickableDemo,
+      selectedTidbitCollection,
+    });
   }
+}
+
+async function captureScreenClicked() {
+  const {spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection} =
+    await getFromStorage([
+      "spaceId",
+      "apiKey",
+      "selectedClickableDemo",
+      "selectedTidbitCollection",
+    ]);
+
+  sendMethodMessage("dodaoContent.captureScreenHtml", {
+    spaceId,
+    apiKey,
+    selectedClickableDemo,
+    selectedTidbitCollection,
+  });
+
+}
+
+function savePage(sender) {
+  business.saveTabs([ sender.tab ], { saveWithTidbitsHub: true });
 }
 
 
@@ -41,6 +92,7 @@ function saveSpaceIdAndApiKey(message) {
 }
 
 async function saveSelectedCollectionAndDemoId(message) {
+  const {spaceId, apiKey} = await getFromStorage(["spaceId", "apiKey"]);
   if (
     message.data.selectedTidbitCollection &&
     message.data.selectedClickableDemo
@@ -49,8 +101,13 @@ async function saveSelectedCollectionAndDemoId(message) {
       selectedTidbitCollection: message.data.selectedTidbitCollection,
       selectedClickableDemo: message.data.selectedClickableDemo,
     });
+    sendMethodMessage("dodaoContent.renderBottomBar", {
+      selectedClickableDemo: message.data.selectedClickableDemo,
+      selectedTidbitCollection: message.data.selectedTidbitCollection,
+      spaceId,
+      apiKey,
+    });
   } else {
-    const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
     sendMethodMessage("dodaoContent.selectClickableDemo", {
       spaceId: spaceId,
       apiKey: apiKey,
@@ -434,6 +491,7 @@ async function uploadScreenshot(screenshotFile, apiKey, spaceId, input) {
   const screenshotUrl = getUploadedImageUrlFromSignedUrl(signedUrl);
   return screenshotUrl;
 }
+
 async function saveDodaoCapture(input, apiKey) {
   const response = await fetch(
     "http://localhost:3000/api/test-academy-eth/html-captures",
@@ -454,4 +512,5 @@ async function saveDodaoCapture(input, apiKey) {
   const data = await response.json();
   return data;
 }
+
 // Assume getSignedUrl, uploadFileToSignedUrl, getUploadedImageUrlFromSignedUrl, and saveDodaoCapture are defined elsewhere
