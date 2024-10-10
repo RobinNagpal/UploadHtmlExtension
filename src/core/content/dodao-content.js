@@ -11,20 +11,23 @@ browser.runtime.onMessage.addListener(async (message) => {
   if (message.method === "dodaoContent.renderBottomBar") {
     console.log(message);
     setupBottomBarWithDemo(
-      message.data.selectedClickableDemo,
-      message.data.selectedTidbitCollection,
       message.data.spaceId,
-      message.data.apiKey
+      message.data.apiKey,
+      message.data.selectedClickableDemo,
+      message.data.selectedTidbitCollection
     );
   }
   if (message.method === "dodaoContent.captureScreenHtml") {
-    console.log(message);
-    captureScreenHtml(
-      message.data.selectedClickableDemo,
-      message.data.selectedTidbitCollection,
-      message.data.spaceId,
-      message.data.apiKey
-    );
+    if (message.data.error) {
+      showErrorNotification(message.data.error);
+    } else {
+      captureScreenHtml(
+        message.data.spaceId,
+        message.data.apiKey,
+        message.data.selectedClickableDemo,
+        message.data.selectedTidbitCollection
+      );
+    }
   }
 });
 
@@ -88,8 +91,6 @@ function showLoginScreen(message) {
           apiKey: apiKeyInput.value,
         },
       });
-      localStorage.setItem("spaceId", spaceIdInput.value);
-      localStorage.setItem("apiKey", apiKeyInput.value);
     },
   });
 }
@@ -99,7 +100,7 @@ async function showCollectionSelection(spaceId, apiKey) {
   const collections = await fetchCollections(spaceId);
   console.log(collections);
   if (collections) {
-    displayCollections(collections, spaceId, apiKey);
+    displayCollections(spaceId, apiKey, collections);
   } else {
     displayErrorModal(
       "Failed to fetch collections. Please try again.",
@@ -127,12 +128,12 @@ async function fetchCollections(spaceId) {
   }
 }
 
-function displayCollections(collections, spaceId, apiKey) {
+function displayCollections(spaceId, apiKey, collections) {
   const selectedCollectionId = localStorage.getItem("selectedCollectionId");
   console.log(selectedCollectionId);
   console.log(collections);
   if (!selectedCollectionId) {
-    showCollectionList(collections, spaceId, apiKey);
+    showCollectionList(spaceId, apiKey, collections);
   } else {
     const selectedCollection = collections.find(
       (collection) => collection.id === selectedCollectionId
@@ -141,16 +142,16 @@ function displayCollections(collections, spaceId, apiKey) {
     if (!selectedCollection) {
       console.error("Selected collection not found or does not exist");
       localStorage.removeItem("selectedCollectionId");
-      showCollectionList(collections, spaceId, apiKey);
+      showCollectionList(spaceId, apiKey, collections);
     } else {
       removeModalElement();
       const demosInCollection = getDemosFromCollection(selectedCollection);
-      displayDemos(selectedCollection, demosInCollection, spaceId, apiKey);
+      displayDemos(spaceId, apiKey, selectedCollection, demosInCollection);
     }
   }
 }
 
-function showCollectionList(collections, spaceId, apiKey) {
+function showCollectionList(spaceId, apiKey, collections) {
   const collectionModalContent = createNewModalElement();
   const container = createContainer();
   const collectionListMessage = createMessageElement(
@@ -169,7 +170,7 @@ function showCollectionList(collections, spaceId, apiKey) {
       const collectionItem = createButton(
         collection.name,
         "collection-item",
-        () => selectCollection(collection, spaceId, apiKey)
+        () => selectCollection(spaceId, apiKey, collection)
       );
       collectionList.appendChild(collectionItem);
     });
@@ -287,14 +288,14 @@ async function createCollection(name, description, spaceId, apiKey) {
   }
 }
 
-async function selectCollection(collection, spaceId, apiKey) {
+async function selectCollection(spaceId, apiKey, collection) {
   localStorage.setItem("selectedCollectionId", collection.id);
   localStorage.setItem("selectedCollection", JSON.stringify(collection));
   removeModalElement();
   await showCollectionSelection(spaceId, apiKey);
 }
 
-function displayDemos(collection, demos, spaceId, apiKey) {
+function displayDemos(spaceId, apiKey, collection, demos) {
   if (!demos) {
     displayErrorModal("Failed to fetch demos. Please try again.", async () => {
       removeModalElement();
@@ -305,20 +306,20 @@ function displayDemos(collection, demos, spaceId, apiKey) {
 
   const selectedDemoId = localStorage.getItem("selectedDemoId");
   if (!selectedDemoId) {
-    showDemoList(collection, demos, spaceId, apiKey);
+    showDemoList(spaceId, apiKey, collection, demos);
   } else {
     const selectedDemo = demos.find((demo) => demo.demoId === selectedDemoId);
     if (!selectedDemo) {
       console.error("Selected demo not found or does not exist");
       localStorage.removeItem("selectedDemoId");
-      showDemoList(collection, demos, spaceId, apiKey);
+      showDemoList(spaceId, apiKey, collection, demos);
     } else {
       // setupBottomBarWithDemo(selectedDemo);
     }
   }
 }
 
-function showDemoList(collection, demos, spaceId, apiKey) {
+function showDemoList(spaceId, apiKey, collection, demos) {
   const demoModalContent = createNewModalElement();
   const container = createContainer();
 
@@ -378,7 +379,7 @@ function setupBottomBarForDemos(spaceId, apiKey) {
   document.head.appendChild(styleElement);
 
   const logoutButton = createButton("Logout", "logout-button", async () => {
-    browser.runtime.sendMessage({ method: "clearLocalStorage" });
+    browser.runtime.sendMessage({ method: "dodaoBackground.logout" });
     localStorage.clear();
     removeModalElement();
     showLoginScreen();
@@ -410,18 +411,11 @@ function setupBottomBarForDemos(spaceId, apiKey) {
   fullScreenModal.appendChild(bottomBar);
 }
 
-function captureScreenHtml(
-  selectedDemo,
-  selectedTidbitCollection,
-  spaceId,
-  apiKey
-) {
-}
 function setupBottomBarWithDemo(
-  selectedDemo,
-  selectedTidbitCollection,
   spaceId,
-  apiKey
+  apiKey,
+  selectedDemo,
+  selectedTidbitCollection
 ) {
   console.log(selectedDemo, selectedTidbitCollection, spaceId, apiKey);
   localStorage.setItem("selectedDemoId", selectedDemo.demoId);
@@ -440,7 +434,7 @@ function setupBottomBarWithDemo(
   const styleElement = createBottomBarStyle();
   document.head.appendChild(styleElement);
   const logoutButton = createButton("Logout", "logout-button", async () => {
-    browser.runtime.sendMessage({ method: "clearLocalStorage" });
+    browser.runtime.sendMessage({ method: "dodaoBackground.logout" });
     localStorage.clear();
     removeModalElement();
     showLoginScreen();
@@ -451,6 +445,7 @@ function setupBottomBarWithDemo(
 
   const demoTitle = document.createElement("span");
   demoTitle.id = selectedDemo.id;
+  demoTitle.classList.add("demo-name");
   demoTitle.textContent = `Selected Demo: ${selectedDemo.title}`;
 
   const saveButton = createButton(
@@ -460,7 +455,6 @@ function setupBottomBarWithDemo(
       browser.runtime.sendMessage({
         method: "dodaoBackground.captureScreenClicked",
       });
-      showSaveFileScreen(selectedDemo, spaceId, apiKey);
     }
   );
 
@@ -573,7 +567,7 @@ async function createDemo(title, excerpt, spaceId, apiKey) {
   }
 }
 
-async function selectDemo(demo, spaceId, apiKey) {
+async function selectDemo(demo) {
   browser.runtime.sendMessage({
     method: "dodaoBackground.saveSelectedClickableDemo",
     data: {
@@ -584,8 +578,6 @@ async function selectDemo(demo, spaceId, apiKey) {
     },
   });
   localStorage.setItem("selectedDemoId", demo.demoId);
-  // removeModalElement();
-  // await showCollectionSelection(spaceId,apiKey);
 }
 
 function addLogoutButton() {
@@ -593,7 +585,7 @@ function addLogoutButton() {
   bottomBar.id = "bottom-bar";
 
   const logoutButton = createButton("Logout", "logout-button", async () => {
-    browser.runtime.sendMessage({ method: "clearLocalStorage" });
+    browser.runtime.sendMessage({ method: "dodaoBackground.logout" });
     localStorage.clear();
     removeModalElement();
     showLoginScreen();
@@ -611,7 +603,7 @@ function addLogoutButton() {
   fullScreenModal.appendChild(bottomBar);
 }
 
-async function showSaveFileScreen(demo, spaceId, apiKey) {
+async function captureScreenHtml(spaceId, apiKey, demo, collection) {
   const demoId = demo.demoId;
   const apiUrl = `http://localhost:3000/api/${spaceId}/html-captures/${demoId}`;
   let existingFiles = [];
@@ -682,13 +674,24 @@ async function showSaveFileScreen(demo, spaceId, apiKey) {
         const bottomBar = document.querySelector("#bottom-bar");
         if (fullScreenModalWrapper) fullScreenModalWrapper.remove();
         if (bottomBar) bottomBar.remove();
+        browser.runtime.sendMessage({
+          method: "dodaoBackground.savePage",
+          data: {
+            simulationOptions,
+          },
+        });
       } else {
         alert("Please enter a file name to save the file.");
       }
     },
     cancelButtonHandler: async () => {
-      removeModalElement();
-      await showCollectionSelection(spaceId, apiKey);
+      browser.runtime.sendMessage({
+        method: "dodaoBackground.saveSelectedClickableDemo",
+        data: {
+          selectedClickableDemo: demo,
+          selectedTidbitCollection: collection,
+        },
+      });
     },
   });
   const existingFilesContainer = document.createElement("div");
@@ -987,7 +990,7 @@ function createBottomBarStyle() {
       z-index: 2147483647; 
       padding: 0 20px; 
     }
-    #bottom-bar #demo-name {
+    #bottom-bar .demo-name {
       flex-grow: 1;
       font-size:24px;
       font-weight: bold; 

@@ -13,16 +13,19 @@ export async function onMessage(message, sender) {
   if (message.method.endsWith("saveSelectedClickableDemo")) {
     saveSelectedCollectionAndDemoId(message);
   }
+  if (message.method.endsWith("logout")) {
+    logout();
+  }
   if (message.method.endsWith("captureScreenClicked")) {
     captureScreenClicked();
   }
   if (message.method.endsWith("savePage")) {
-    savePage(sender);
+    savePage(message, sender);
   }
 }
 
 export async function dodaoExtensionIconClicked() {
-  const {spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection} =
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
     await getFromStorage([
       "spaceId",
       "apiKey",
@@ -52,7 +55,7 @@ export async function dodaoExtensionIconClicked() {
 }
 
 async function captureScreenClicked() {
-  const {spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection} =
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
     await getFromStorage([
       "spaceId",
       "apiKey",
@@ -66,13 +69,40 @@ async function captureScreenClicked() {
     selectedClickableDemo,
     selectedTidbitCollection,
   });
-
+}
+function logout() {
+  chrome.storage.local.remove([
+    "spaceId",
+    "apiKey",
+    "selectedClickableDemo",
+    "selectedTidbitCollection",
+  ]);
+  sendMethodMessage("dodaoContent.captureApiKey");
 }
 
-function savePage(sender) {
-  business.saveTabs([ sender.tab ], { saveWithTidbitsHub: true });
+async function savePage(message, sender) {
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
+    await getFromStorage([
+      "spaceId",
+      "apiKey",
+      "selectedClickableDemo",
+      "selectedTidbitCollection",
+    ]);
+  if (message.data.simulationOptions.fileName) {
+    business.saveTabs([sender.tab], {
+      saveWithTidbitsHub: true,
+      simulationOptions: message.data.simulationOptions,
+    });
+  } else {
+    sendMethodMessage("dodaoContent.captureScreenHtml", {
+      error: "Filename is required",
+      spaceId,
+      apiKey,
+      selectedClickableDemo,
+      selectedTidbitCollection,
+    });
+  }
 }
-
 
 function saveSpaceIdAndApiKey(message) {
   if (message.data.spaceId && message.data.apiKey) {
@@ -92,7 +122,7 @@ function saveSpaceIdAndApiKey(message) {
 }
 
 async function saveSelectedCollectionAndDemoId(message) {
-  const {spaceId, apiKey} = await getFromStorage(["spaceId", "apiKey"]);
+  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
   if (
     message.data.selectedTidbitCollection &&
     message.data.selectedClickableDemo

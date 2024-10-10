@@ -144,7 +144,7 @@ async function saveTabs(tabs, options = {}) {
 				addTask({
 					status: TASK_PENDING_STATE,
 					tab: tabData,
-					options: tabOptions,
+					options: { ...tabOptions , ...options },
 					method: "content.save"
 				});
 			} else {
