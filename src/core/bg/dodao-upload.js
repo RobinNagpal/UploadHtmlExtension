@@ -17,7 +17,7 @@ export async function onMessage(message, sender) {
     captureScreenClicked();
   }
   if (message.method.endsWith("savePage")) {
-    savePage();
+    savePage(sender);
   }
 }
 
@@ -69,8 +69,8 @@ async function captureScreenClicked() {
 
 }
 
-function savePage() {
-  business.saveTabs([sender.tab], {}, true);
+function savePage(sender) {
+  business.saveTabs([ sender.tab ], { saveWithTidbitsHub: true });
 }
 
 
@@ -130,7 +130,7 @@ export async function uploadFileToDodao(
 
   try {
     // Convert blob to file using user input for file name
-    const file = new File([blob], fileName, {type: "text/html"});
+    const file = new File([blob], fileName, { type: "text/html" });
     const htmlContent = await readFileAsText(file);
 
     // Manipulate the HTML
@@ -149,7 +149,7 @@ export async function uploadFileToDodao(
     };
 
     // Fetch 'spaceId' and 'apiKey' from chrome.storage
-    const {spaceId, apiKey, selecteCollectionId, selectedDemoId} =
+    const { spaceId, apiKey, selecteCollectionId, selectedDemoId } =
       await getFromStorage([
         "spaceId",
         "apiKey",
@@ -212,11 +212,11 @@ function getFromStorage(keys) {
 
 function sendMethodMessage(method, data) {
   return new Promise((resolve) => {
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) {
         browser.tabs.sendMessage(
           tabs[0].id,
-          {method: method, data: data},
+          { method: method, data: data },
           resolve
         );
       } else {
@@ -225,25 +225,23 @@ function sendMethodMessage(method, data) {
     });
   });
 }
-
 // Helper function to send an error message to the active tab
 function sendErrorMessage(message) {
   return new Promise((resolve) => {
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, {error: message}, resolve);
+        chrome.tabs.sendMessage(tabs[0].id, { error: message }, resolve);
       } else {
         resolve();
       }
     });
   });
 }
-
 function sendSuccessMessage(message) {
   return new Promise((resolve) => {
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, {success: message}, resolve);
+        chrome.tabs.sendMessage(tabs[0].id, { success: message }, resolve);
       } else {
         resolve();
       }
@@ -259,7 +257,7 @@ async function getSignedUrl(spaceId, apiKey, input) {
       "X-API-KEY": apiKey,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({spaceId, input}),
+    body: JSON.stringify({ spaceId, input }),
   });
 
   if (!response.ok) {
@@ -270,7 +268,6 @@ async function getSignedUrl(spaceId, apiKey, input) {
   const data = await response.json();
   return data.url;
 }
-
 // Helper function to upload a file to a signed URL
 function uploadFileToSignedUrl(url, file, contentType) {
   return fetch(url, {
@@ -410,7 +407,7 @@ export async function getScreenshot(
           };
 
           await saveDodaoCapture(captureInput, apiKey);
-          chrome.runtime.sendMessage({action: "screenshotCaptured"});
+          chrome.runtime.sendMessage({ action: "screenshotCaptured" });
         }
       } catch (error) {
         console.error("Error capturing screenshot:", error);
@@ -477,7 +474,7 @@ function canvasToFile(canvas, fileName, fileType) {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (blob) {
-        resolve(new File([blob], fileName, {type: fileType}));
+        resolve(new File([blob], fileName, { type: fileType }));
       } else {
         reject(new Error("Canvas is empty"));
       }
@@ -504,7 +501,7 @@ async function saveDodaoCapture(input, apiKey) {
         "X-API-KEY": apiKey,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({input}),
+      body: JSON.stringify({ input }),
     }
   );
 

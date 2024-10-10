@@ -112,7 +112,7 @@ async function extensionIconClicked(tab) {
 	await dodaoExtensionIconClicked()
 }
 
-async function saveTabs(tabs, options = {},showLoginScreen) {
+async function saveTabs(tabs, options = {}) {
 	await initMaxParallelWorkers();
 	await Promise.all(tabs.map(async tab => {
 		const tabId = tab.id;

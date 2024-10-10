@@ -25,8 +25,12 @@ clear the selected collection and demo from the storage and send back the messag
 
 
 ### PR 2
+- [ ] In the `dodaoContent.captureScreenHtml` we hide the bottom bar, and ask for the file name. We then send a message to the bg script
+with the filename. Background script can then call savePage/saveTabs 
+- [ ] Update the method signatures to follow the parameter order -  spaceId, apiKey, selectedTidbitCollection, selectedDemo. Or follow the similar pattern.
+- [ ] Remove all references to localStorage in the content script. Just do it for the flows implemented so far.
 
- 
+  
 # Work
 - [ ] Make the environment url configurable by importing the base url from a single file. You can probably create a 
 file called dodao-constants.ts
