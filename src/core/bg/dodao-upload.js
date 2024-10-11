@@ -25,8 +25,11 @@ export async function onMessage(message, sender) {
   if (message.method.endsWith("changeCollection")) {
     changeCollection();
   }
-  if (message.method.endsWith("changeDemo")) {
-    changeDemo(message);
+  if (message.method.endsWith("changeDemoClicked")) {
+    changeDemoClicked(message);
+  }
+  if (message.method.endsWith("cancelCaptureHtmlScreenClicked")) {
+    cancelCaptureHtmlScreenClicked(message);
   }
 }
 
@@ -100,7 +103,7 @@ async function changeCollection() {
   });
 }
 
-async function changeDemo(message) {
+async function changeDemoClicked(message) {
   const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
   chrome.storage.local.set({
     selectedTidbitCollection: message.data.selectedTidbitCollection,
@@ -122,10 +125,10 @@ async function savePage(message, sender) {
       "selectedClickableDemo",
       "selectedTidbitCollection",
     ]);
-  if (message.data.simulationOptions.fileName) {
+  if (message.data.captureHtmlScreenFileName) {
     business.saveTabs([sender.tab], {
       saveWithTidbitsHub: true,
-      simulationOptions: message.data.simulationOptions,
+      captureHtmlScreenFileName: message.data.captureHtmlScreenFileName,
     });
   } else {
     sendMethodMessage("dodaoContent.captureScreenHtml", {
@@ -178,6 +181,23 @@ async function saveSelectedCollectionAndDemoId(message) {
       error: "Select the demo and collection again",
     });
   }
+}
+
+async function cancelCaptureHtmlScreenClicked(message) {
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
+    await getFromStorage([
+      "spaceId",
+      "apiKey",
+      "selectedClickableDemo",
+      "selectedTidbitCollection",
+    ]);
+
+  sendMethodMessage("dodaoContent.renderBottomBar", {
+    spaceId,
+    apiKey,
+    selectedClickableDemo,
+    selectedTidbitCollection,
+  });
 }
 
 export async function uploadFileToDodao(
@@ -429,13 +449,23 @@ export async function getScreenshot(
   url,
   apiKey,
   spaceId,
-  simulationOptions,
   name
 ) {
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
+    await getFromStorage([
+      "spaceId",
+      "apiKey",
+      "selectedClickableDemo",
+      "selectedTidbitCollection",
+    ]);
+  const demo = selectedClickableDemo;
+  const objectId = demo.title.replace(/\s+/g, "-");
+  const demoId = demo.demoId;
+
   const input = {
-    imageType: "ClickableDemos",
+    imageType: "ClickableDemoHtmlCapture",
     contentType: "image/png",
-    objectId: simulationOptions.objectId,
+    objectId: objectId,
     name: `${name}_screenshot`,
   };
 
@@ -463,8 +493,9 @@ export async function getScreenshot(
             input
           );
 
+
           const captureInput = {
-            clickableDemoId: simulationOptions.demoId,
+            clickableDemoId: demoId,
             fileName: name,
             fileUrl: url,
             fileImageUrl: screenshotUrl,

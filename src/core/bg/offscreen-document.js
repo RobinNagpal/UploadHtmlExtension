@@ -29,9 +29,9 @@ import * as yabson from "./../../lib/yabson/yabson.js";
 import { getScreenshot } from "./dodao-upload.js";
 const parsers = new Map();
 
-browser.runtime.onMessage.addListener(async ({ method, pageData, url, data, mimeType, options, width, height, tabId,apiKey,spaceId,simulationOptions,name }) => {
+browser.runtime.onMessage.addListener(async ({ method, pageData, url, data, mimeType, options, width, height, tabId, apiKey, spaceId, name }) => {
     if (method == "captureScreenshot") {
-      getScreenshot(url, apiKey, spaceId, simulationOptions, name);
+      getScreenshot(url, apiKey, spaceId, name);
     }
     if (method == "processPage") {
 		const result = await getPageData(options, null, null, { fetch });

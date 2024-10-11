@@ -50,13 +50,14 @@ async function showsaveClickableDemoScreen(message) {
         message.data.selectedClickableDemo
       );
     }, 2000); // This delays the function call by 2 seconds
+  } else {
+    await showCollectionSelection(
+      message.data.spaceId,
+      message.data.apiKey,
+      message.data.selectedTidbitCollection,
+      message.data.selectedClickableDemo
+    );
   }
-  await showCollectionSelection(
-    message.data.spaceId,
-    message.data.apiKey,
-    message.data.selectedTidbitCollection,
-    message.data.selectedClickableDemo
-  );
 }
 
 function showLoginScreen(message) {
@@ -779,11 +780,7 @@ async function captureScreenHtml(spaceId, apiKey, demo, collection) {
     submitButtonHandler: async () => {
       const nameInput = inputs[0].element;
       if (nameInput.value) {
-        const simulationOptions = {
-          fileName: nameInput.value,
-          objectId: demo.title.replace(/\s+/g, "-"),
-          demoId: demo.demoId,
-        };
+        const fileName = nameInput.value;
         const fullScreenModalWrapper = document.querySelector(
           "#dodao-full-screen-modal-wrapper"
         );
@@ -793,7 +790,7 @@ async function captureScreenHtml(spaceId, apiKey, demo, collection) {
         browser.runtime.sendMessage({
           method: "dodaoBackground.savePage",
           data: {
-            simulationOptions,
+            captureHtmlScreenFileName: fileName,
           },
         });
       } else {
@@ -802,7 +799,7 @@ async function captureScreenHtml(spaceId, apiKey, demo, collection) {
     },
     cancelButtonHandler: async () => {
       browser.runtime.sendMessage({
-        method: "dodaoBackground.saveSelectedClickableDemo",
+        method: "dodaoBackground.cancelCaptureHtmlScreenClicked",
         data: {
           selectedClickableDemo: demo,
           selectedTidbitCollection: collection,

@@ -116,7 +116,7 @@ async function downloadPage(pageData, options) {
 		S3AccessKey: options.S3AccessKey,
 		S3SecretKey: options.S3SecretKey,
 		saveWithTidbitsHub: options.saveWithTidbitsHub,
-		simulationOptions: options.simulationOptions,
+		captureHtmlScreenFileName: options.captureHtmlScreenFileName,
 	};
 	const pingInterval = setInterval(() => {
 		browser.runtime.sendMessage({ method: "ping" }).then(() => { });
@@ -165,7 +165,7 @@ async function downloadPage(pageData, options) {
 			}
 			if (filename) {
 				message.filename = pageData.filename = filename;
-				pageData.filename =options.simulationOptions.fileName
+				pageData.filename = options.captureHtmlScreenFileName;
 				const blobURL = URL.createObjectURL(new Blob([pageData.content], { type: pageData.mimeType }));
 				message.blobURL = blobURL;
 				const result = await browser.runtime.sendMessage(message);
