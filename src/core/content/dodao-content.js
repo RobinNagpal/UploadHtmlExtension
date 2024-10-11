@@ -483,7 +483,7 @@ function setupBottomBarForDemos(
     "choose-collection-button",
     () => {
       browser.runtime.sendMessage({
-        method: "dodaoBackground.changeCollection",
+        method: "dodaoBackground.changeCollectionClicked",
       });
     }
   );
@@ -550,7 +550,7 @@ function setupBottomBarWithDemo(
     "choose-another-button",
     async () => {
       browser.runtime.sendMessage({
-        method: "dodaoBackground.changeDemo",
+        method: "dodaoBackground.changeDemoClicked",
         data: {
           selectedClickableDemo: null,
           selectedTidbitCollection: selectedTidbitCollection,
