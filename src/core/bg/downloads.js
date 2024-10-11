@@ -244,8 +244,8 @@ async function downloadContent(message, tab) {
 				});
 			} else if(message.saveWithTidbitsHub){
 				const blob = new Blob([message.content], { type: message.mimeType });
-				uploadFileToDodao(message.simulationOptions, blob, (url,apiKey,spaceId,simulationOptions,name) => {
-					offscreen.captureScreenshot(url,apiKey,spaceId,simulationOptions,name)
+				uploadFileToDodao(message.captureHtmlScreenFileName, blob, (spaceId,apiKey,demo,url,name) => {
+					offscreen.captureScreenshot(spaceId,apiKey,demo,url,name)
 				});
 			} else {
 				response = await downloadPage(message, {

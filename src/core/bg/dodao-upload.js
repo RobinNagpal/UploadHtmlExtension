@@ -1,7 +1,6 @@
 import html2canvas from "html2canvas";
 
 let business;
-
 export function init(businessApi) {
   business = businessApi;
 }
@@ -22,8 +21,8 @@ export async function onMessage(message, sender) {
   if (message.method.endsWith("savePage")) {
     savePage(message, sender);
   }
-  if (message.method.endsWith("changeCollection")) {
-    changeCollection();
+  if (message.method.endsWith("changeCollectionClicked")) {
+    changeCollectionClicked();
   }
   if (message.method.endsWith("changeDemoClicked")) {
     changeDemoClicked(message);
@@ -91,7 +90,7 @@ function logout() {
   sendMethodMessage("dodaoContent.captureApiKey");
 }
 
-async function changeCollection() {
+async function changeCollectionClicked() {
   const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
   chrome.storage.local.set({
     selectedTidbitCollection: null,
@@ -104,6 +103,7 @@ async function changeCollection() {
 }
 
 async function changeDemoClicked(message) {
+  console.log("changeDemoClicked", message);
   const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
   chrome.storage.local.set({
     selectedTidbitCollection: message.data.selectedTidbitCollection,
@@ -201,12 +201,12 @@ async function cancelCaptureHtmlScreenClicked(message) {
 }
 
 export async function uploadFileToDodao(
-  simulationOptions,
+  captureHtmlScreenFileName,
   blob,
   callbackFunction
 ) {
-  console.log("Uploading file to DoDAO", simulationOptions, blob);
-  const fileName = simulationOptions.fileName;
+  console.log("Uploading file to DoDAO", captureHtmlScreenFileName, blob);
+  const fileName = captureHtmlScreenFileName;
   if (!fileName) {
     await sendErrorMessage("Enter File Name");
     return;
@@ -225,27 +225,28 @@ export async function uploadFileToDodao(
       type: "text/html",
     });
 
-    const input = {
-      imageType: "ClickableDemos",
-      contentType: file.type,
-      objectId: simulationOptions.objectId,
-      name: file.name,
-    };
-
-    // Fetch 'spaceId' and 'apiKey' from chrome.storage
-    const { spaceId, apiKey, selecteCollectionId, selectedDemoId } =
+    const {spaceId,apiKey, selectedClickableDemo, selectedTidbitCollection } =
       await getFromStorage([
         "spaceId",
         "apiKey",
-        "selectedCollectionId",
-        "selectedDemoId",
+        "selectedClickableDemo",
+        "selectedTidbitCollection",
       ]);
+    const demo = selectedClickableDemo;
+    const objectId = demo.title.replace(/\s+/g, "-");
+
+    const input = {
+      imageType: "ClickableDemos",
+      contentType: file.type,
+      objectId: objectId,
+      name: file.name,
+    };
     console.log(
       "Uploading file to DoDAO",
       spaceId,
       apiKey,
-      selecteCollectionId,
-      selectedDemoId
+      selectedTidbitCollection,
+      selectedClickableDemo
     );
     if (!spaceId || !apiKey) {
       console.log("No data found in chrome.storage");
@@ -264,10 +265,8 @@ export async function uploadFileToDodao(
       response.text()
     );
     sendSuccessMessage("File uploaded successfully");
-
     // Optionally, execute the callback function
-    if (callbackFunction)
-      callbackFunction(fileUrl, apiKey, spaceId, simulationOptions, file.name);
+    callbackFunction(spaceId,apiKey,selectedClickableDemo,fileUrl, fileName);
   } catch (error) {
     console.error("Error uploading file:", error);
     await sendErrorMessage("Failed to upload the File");
@@ -445,20 +444,9 @@ function insertTagsIntoHtml(htmlContent, insertionIndex, tags) {
   ].join("");
 }
 
-export async function getScreenshot(
-  url,
-  apiKey,
-  spaceId,
-  name
-) {
-  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
-    await getFromStorage([
-      "spaceId",
-      "apiKey",
-      "selectedClickableDemo",
-      "selectedTidbitCollection",
-    ]);
-  const demo = selectedClickableDemo;
+export async function getScreenshot(spaceId,apiKey,demo,url, name) {
+
+  console.log(3213123)
   const objectId = demo.title.replace(/\s+/g, "-");
   const demoId = demo.demoId;
 
@@ -468,10 +456,8 @@ export async function getScreenshot(
     objectId: objectId,
     name: `${name}_screenshot`,
   };
-
   try {
     const htmlContent = await fetchHtmlContent(url);
-
     const iframe = createIframeWithContent(htmlContent);
     document.body.appendChild(iframe);
 
@@ -486,6 +472,8 @@ export async function getScreenshot(
             "screenshot.png",
             "image/png"
           );
+          console.log(screenshotFile);
+          console.log(apiKey)
           const screenshotUrl = await uploadScreenshot(
             screenshotFile,
             apiKey,
@@ -493,15 +481,14 @@ export async function getScreenshot(
             input
           );
 
-
           const captureInput = {
             clickableDemoId: demoId,
             fileName: name,
             fileUrl: url,
             fileImageUrl: screenshotUrl,
           };
-
-          await saveDodaoCapture(captureInput, apiKey);
+          console.log(captureInput);
+          await saveDodaoCapture(captureInput, spaceId,apiKey);
           chrome.runtime.sendMessage({ action: "screenshotCaptured" });
         }
       } catch (error) {
@@ -587,9 +574,10 @@ async function uploadScreenshot(screenshotFile, apiKey, spaceId, input) {
   return screenshotUrl;
 }
 
-async function saveDodaoCapture(input, apiKey) {
+async function saveDodaoCapture(input, spaceId, apiKey) {
+  console.log ("Saving DoDAO capture", input);
   const response = await fetch(
-    "http://localhost:3000/api/test-academy-eth/html-captures",
+    `http://localhost:3000/api/${spaceId}/html-captures`,
     {
       method: "POST",
       headers: {
@@ -601,6 +589,7 @@ async function saveDodaoCapture(input, apiKey) {
   );
 
   if (!response.ok) {
+    console.log(12321)
     await sendErrorMessage("Failed to update capture");
     return null;
   }
