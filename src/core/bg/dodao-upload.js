@@ -38,6 +38,8 @@ export async function dodaoExtensionIconClicked() {
     sendMethodMessage("dodaoContent.selectClickableDemo", {
       spaceId: spaceId,
       apiKey: apiKey,
+      selectedClickableDemo: selectedClickableDemo,
+      selectedTidbitCollection: selectedTidbitCollection,
     });
   } else if (
     spaceId &&
@@ -137,12 +139,33 @@ async function saveSelectedCollectionAndDemoId(message) {
       spaceId,
       apiKey,
     });
-  } else {
-    sendMethodMessage("dodaoContent.selectClickableDemo", {
-      spaceId: spaceId,
-      apiKey: apiKey,
-      error: "Select the demo and collection again",
+  } else if (
+    message.data.selectedTidbitCollection &&
+    !message.data.selectedClickableDemo
+  ) {
+    chrome.storage.local.set({
+      selectedTidbitCollection: message.data.selectedTidbitCollection,
+      selectedClickableDemo: null,
     });
+    sendMethodMessage("dodaoContent.selectClickableDemo", {
+      selectedClickableDemo: null,
+      selectedTidbitCollection: message.data.selectedTidbitCollection,
+      spaceId,
+      apiKey,
+    });
+  } else {
+    if (message.data.change) {
+      sendMethodMessage("dodaoContent.selectClickableDemo", {
+        spaceId: spaceId,
+        apiKey: apiKey,
+      });
+    } else {
+      sendMethodMessage("dodaoContent.selectClickableDemo", {
+        spaceId: spaceId,
+        apiKey: apiKey,
+        error: "Select the demo and collection again",
+      });
+    }
   }
 }
 
