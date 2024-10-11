@@ -22,6 +22,12 @@ export async function onMessage(message, sender) {
   if (message.method.endsWith("savePage")) {
     savePage(message, sender);
   }
+  if (message.method.endsWith("changeCollection")) {
+    changeCollection();
+  }
+  if (message.method.endsWith("changeDemo")) {
+    changeDemo(message);
+  }
 }
 
 export async function dodaoExtensionIconClicked() {
@@ -82,6 +88,32 @@ function logout() {
   sendMethodMessage("dodaoContent.captureApiKey");
 }
 
+async function changeCollection() {
+  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
+  chrome.storage.local.set({
+    selectedTidbitCollection: null,
+    selectedClickableDemo: null,
+  });
+  sendMethodMessage("dodaoContent.selectClickableDemo", {
+    spaceId: spaceId,
+    apiKey: apiKey,
+  });
+}
+
+async function changeDemo(message) {
+  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
+  chrome.storage.local.set({
+    selectedTidbitCollection: message.data.selectedTidbitCollection,
+    selectedClickableDemo: null,
+  });
+  sendMethodMessage("dodaoContent.selectClickableDemo", {
+    spaceId: spaceId,
+    apiKey: apiKey,
+    selectedTidbitCollection: message.data.selectedTidbitCollection,
+    selectedClickableDemo: null,
+  });
+}
+
 async function savePage(message, sender) {
   const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
     await getFromStorage([
@@ -139,33 +171,12 @@ async function saveSelectedCollectionAndDemoId(message) {
       spaceId,
       apiKey,
     });
-  } else if (
-    message.data.selectedTidbitCollection &&
-    !message.data.selectedClickableDemo
-  ) {
-    chrome.storage.local.set({
-      selectedTidbitCollection: message.data.selectedTidbitCollection,
-      selectedClickableDemo: null,
-    });
-    sendMethodMessage("dodaoContent.selectClickableDemo", {
-      selectedClickableDemo: null,
-      selectedTidbitCollection: message.data.selectedTidbitCollection,
-      spaceId,
-      apiKey,
-    });
   } else {
-    if (message.data.change) {
-      sendMethodMessage("dodaoContent.selectClickableDemo", {
-        spaceId: spaceId,
-        apiKey: apiKey,
-      });
-    } else {
-      sendMethodMessage("dodaoContent.selectClickableDemo", {
-        spaceId: spaceId,
-        apiKey: apiKey,
-        error: "Select the demo and collection again",
-      });
-    }
+    sendMethodMessage("dodaoContent.selectClickableDemo", {
+      spaceId: spaceId,
+      apiKey: apiKey,
+      error: "Select the demo and collection again",
+    });
   }
 }
 
