@@ -109,7 +109,7 @@ async function extensionIconClicked(tab) {
 	await injectScript(tabId, tabOptions);
 	ui.onStart(tabId, EXECUTE_SCRIPTS_STEP);
 
-	await dodaoExtensionIconClicked()
+	await dodaoExtensionIconClicked(tab)
 }
 
 async function saveTabs(tabs, options = {}) {

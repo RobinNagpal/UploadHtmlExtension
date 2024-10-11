@@ -59,9 +59,9 @@ async function processPage(options) {
 	await createOffscreenDocument();
 	return browser.runtime.sendMessage({ method: "processPage", options });
 }
-async function captureScreenshot(url,apiKey,spaceId,simulationOptions,name) {
+async function captureScreenshot(url, apiKey, spaceId, simulationOptions, name) {
 	await createOffscreenDocument();
-	return browser.runtime.sendMessage({ method: "captureScreenshot", url,apiKey,spaceId,simulationOptions,name});
+	return browser.runtime.sendMessage({ method: "captureScreenshot", url, apiKey, spaceId, simulationOptions, name });
  }
 async function revokeObjectURL(url) {
 	await createOffscreenDocument();

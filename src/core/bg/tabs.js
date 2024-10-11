@@ -85,6 +85,10 @@ async function onTabUpdated(tabId, changeInfo) {
 			await tabsData.set(allTabsData);
 			ui.onTabActivated(tab);
 		}
+
+		// if dodaoExtActiveTabId is same as the current tabId, then
+		// here can we call business.extensionIconClicked(tab)
+
 	}
 	if (changeInfo.discarded) {
 		autosave.onTabDiscarded(tabId);

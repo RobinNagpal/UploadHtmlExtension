@@ -49,10 +49,6 @@ browser.runtime.onMessage.addListener((message, sender) => {
 	if (message.method.startsWith("dodaoBackground.")) { 
 		dodaoBackground.onMessage(message, sender);
 	}
-	if (message.method.startsWith("clearLocalStorage")) {
-		const keysToRemove = ['spaceId', 'selectedDemoId', 'apiKey', 'selectedCollectionId'];
-		chrome.storage.local.remove(keysToRemove);
-	 }
 	if (message.method.startsWith("downloads.")) {
 		return downloads.onMessage(message, sender);
 	}

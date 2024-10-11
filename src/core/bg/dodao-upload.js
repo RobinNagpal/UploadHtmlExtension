@@ -33,7 +33,8 @@ export async function onMessage(message, sender) {
   }
 }
 
-export async function dodaoExtensionIconClicked() {
+export async function dodaoExtensionIconClicked(tab) {
+  // Store dodaoExtActiveTabId
   const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
     await getFromStorage([
       "spaceId",
