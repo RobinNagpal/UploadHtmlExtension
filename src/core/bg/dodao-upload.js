@@ -13,16 +13,28 @@ export async function onMessage(message, sender) {
   if (message.method.endsWith("saveSelectedClickableDemo")) {
     saveSelectedCollectionAndDemoId(message);
   }
+  if (message.method.endsWith("logout")) {
+    logout();
+  }
   if (message.method.endsWith("captureScreenClicked")) {
     captureScreenClicked();
   }
   if (message.method.endsWith("savePage")) {
-    savePage(sender);
+    savePage(message, sender);
+  }
+  if (message.method.endsWith("changeCollection")) {
+    changeCollection();
+  }
+  if (message.method.endsWith("changeDemoClicked")) {
+    changeDemoClicked(message);
+  }
+  if (message.method.endsWith("cancelCaptureHtmlScreenClicked")) {
+    cancelCaptureHtmlScreenClicked(message);
   }
 }
 
 export async function dodaoExtensionIconClicked() {
-  const {spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection} =
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
     await getFromStorage([
       "spaceId",
       "apiKey",
@@ -35,6 +47,8 @@ export async function dodaoExtensionIconClicked() {
     sendMethodMessage("dodaoContent.selectClickableDemo", {
       spaceId: spaceId,
       apiKey: apiKey,
+      selectedClickableDemo: selectedClickableDemo,
+      selectedTidbitCollection: selectedTidbitCollection,
     });
   } else if (
     spaceId &&
@@ -52,7 +66,7 @@ export async function dodaoExtensionIconClicked() {
 }
 
 async function captureScreenClicked() {
-  const {spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection} =
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
     await getFromStorage([
       "spaceId",
       "apiKey",
@@ -66,13 +80,66 @@ async function captureScreenClicked() {
     selectedClickableDemo,
     selectedTidbitCollection,
   });
-
+}
+function logout() {
+  chrome.storage.local.remove([
+    "spaceId",
+    "apiKey",
+    "selectedClickableDemo",
+    "selectedTidbitCollection",
+  ]);
+  sendMethodMessage("dodaoContent.captureApiKey");
 }
 
-function savePage(sender) {
-  business.saveTabs([ sender.tab ], { saveWithTidbitsHub: true });
+async function changeCollection() {
+  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
+  chrome.storage.local.set({
+    selectedTidbitCollection: null,
+    selectedClickableDemo: null,
+  });
+  sendMethodMessage("dodaoContent.selectClickableDemo", {
+    spaceId: spaceId,
+    apiKey: apiKey,
+  });
 }
 
+async function changeDemoClicked(message) {
+  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
+  chrome.storage.local.set({
+    selectedTidbitCollection: message.data.selectedTidbitCollection,
+    selectedClickableDemo: null,
+  });
+  sendMethodMessage("dodaoContent.selectClickableDemo", {
+    spaceId: spaceId,
+    apiKey: apiKey,
+    selectedTidbitCollection: message.data.selectedTidbitCollection,
+    selectedClickableDemo: null,
+  });
+}
+
+async function savePage(message, sender) {
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
+    await getFromStorage([
+      "spaceId",
+      "apiKey",
+      "selectedClickableDemo",
+      "selectedTidbitCollection",
+    ]);
+  if (message.data.captureHtmlScreenFileName) {
+    business.saveTabs([sender.tab], {
+      saveWithTidbitsHub: true,
+      captureHtmlScreenFileName: message.data.captureHtmlScreenFileName,
+    });
+  } else {
+    sendMethodMessage("dodaoContent.captureScreenHtml", {
+      error: "Filename is required",
+      spaceId,
+      apiKey,
+      selectedClickableDemo,
+      selectedTidbitCollection,
+    });
+  }
+}
 
 function saveSpaceIdAndApiKey(message) {
   if (message.data.spaceId && message.data.apiKey) {
@@ -92,7 +159,7 @@ function saveSpaceIdAndApiKey(message) {
 }
 
 async function saveSelectedCollectionAndDemoId(message) {
-  const {spaceId, apiKey} = await getFromStorage(["spaceId", "apiKey"]);
+  const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
   if (
     message.data.selectedTidbitCollection &&
     message.data.selectedClickableDemo
@@ -114,6 +181,23 @@ async function saveSelectedCollectionAndDemoId(message) {
       error: "Select the demo and collection again",
     });
   }
+}
+
+async function cancelCaptureHtmlScreenClicked(message) {
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
+    await getFromStorage([
+      "spaceId",
+      "apiKey",
+      "selectedClickableDemo",
+      "selectedTidbitCollection",
+    ]);
+
+  sendMethodMessage("dodaoContent.renderBottomBar", {
+    spaceId,
+    apiKey,
+    selectedClickableDemo,
+    selectedTidbitCollection,
+  });
 }
 
 export async function uploadFileToDodao(
@@ -365,13 +449,23 @@ export async function getScreenshot(
   url,
   apiKey,
   spaceId,
-  simulationOptions,
   name
 ) {
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
+    await getFromStorage([
+      "spaceId",
+      "apiKey",
+      "selectedClickableDemo",
+      "selectedTidbitCollection",
+    ]);
+  const demo = selectedClickableDemo;
+  const objectId = demo.title.replace(/\s+/g, "-");
+  const demoId = demo.demoId;
+
   const input = {
-    imageType: "ClickableDemos",
+    imageType: "ClickableDemoHtmlCapture",
     contentType: "image/png",
-    objectId: simulationOptions.objectId,
+    objectId: objectId,
     name: `${name}_screenshot`,
   };
 
@@ -399,8 +493,9 @@ export async function getScreenshot(
             input
           );
 
+
           const captureInput = {
-            clickableDemoId: simulationOptions.demoId,
+            clickableDemoId: demoId,
             fileName: name,
             fileUrl: url,
             fileImageUrl: screenshotUrl,
