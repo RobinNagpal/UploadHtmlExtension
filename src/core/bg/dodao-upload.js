@@ -30,9 +30,12 @@ export async function onMessage(message, sender) {
   if (message.method.endsWith("cancelCaptureHtmlScreenClicked")) {
     cancelCaptureHtmlScreenClicked(message);
   }
+  if (message.method.endsWith("refresh")) {
+    refresh();
+  }
 }
 
-export async function dodaoExtensionIconClicked() {
+export async function dodaoExtensionIconClicked(tab) {
   const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
     await getFromStorage([
       "spaceId",
@@ -40,6 +43,7 @@ export async function dodaoExtensionIconClicked() {
       "selectedClickableDemo",
       "selectedTidbitCollection",
     ]);
+  chrome.storage.local.set({dodaoExtActiveTabId: tab.id});
   if (!spaceId || !apiKey) {
     sendMethodMessage("dodaoContent.captureApiKey");
   } else if (!selectedClickableDemo || !selectedTidbitCollection) {
@@ -62,6 +66,16 @@ export async function dodaoExtensionIconClicked() {
       selectedTidbitCollection,
     });
   }
+}
+
+// Helper function to get data from chrome.storage
+export function getFromStorage(keys) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(keys, (result) => {
+      if (chrome.runtime.lastError) reject(chrome.runtime.lastError);
+      else resolve(result);
+    });
+  });
 }
 
 async function captureScreenClicked() {
@@ -156,6 +170,23 @@ function saveSpaceIdAndApiKey(message) {
       error: "SpaceId and apiKey are required",
     });
   }
+}
+
+async function refresh() {
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
+    await getFromStorage([
+      "spaceId",
+      "apiKey",
+      "selectedClickableDemo",
+      "selectedTidbitCollection",
+    ]);
+
+  sendMethodMessage("dodaoContent.renderBottomBar", {
+    spaceId,
+    apiKey,
+    selectedClickableDemo,
+    selectedTidbitCollection,
+  });
 }
 
 async function saveSelectedCollectionAndDemoId(message) {
@@ -280,16 +311,6 @@ function readFileAsText(file) {
     reader.onload = () => resolve(reader.result);
     reader.onerror = () => reject(reader.error);
     reader.readAsText(file);
-  });
-}
-
-// Helper function to get data from chrome.storage
-function getFromStorage(keys) {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(keys, (result) => {
-      if (chrome.runtime.lastError) reject(chrome.runtime.lastError);
-      else resolve(result);
-    });
   });
 }
 
@@ -488,7 +509,7 @@ export async function getScreenshot(spaceId, apiKey, demo, url, name) {
           };
           console.log(captureInput);
           await saveDodaoCapture(captureInput, spaceId, apiKey);
-          chrome.runtime.sendMessage({ action: "screenshotCaptured" });
+          browser.runtime.sendMessage({method:"dodaoBackground.refresh"})
         }
       } catch (error) {
         console.error("Error capturing screenshot:", error);
