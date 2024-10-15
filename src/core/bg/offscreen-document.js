@@ -31,7 +31,8 @@ const parsers = new Map();
 
 browser.runtime.onMessage.addListener(async ({ method, pageData, url, data, mimeType, options, width, height, tabId, apiKey, spaceId,demo, name }) => {
     if (method == "captureScreenshot") {
-      getScreenshot(spaceId,apiKey,demo,url,name);
+		getScreenshot(spaceId, apiKey, demo, url, name);
+		return {};
     }
     if (method == "processPage") {
 		const result = await getPageData(options, null, null, { fetch });

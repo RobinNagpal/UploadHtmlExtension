@@ -47,7 +47,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
 		return tabs.onMessage(message, sender);
 	}
 	if (message.method.startsWith("dodaoBackground.")) { 
-		dodaoBackground.onMessage(message, sender);
+		return dodaoBackground.onMessage(message, sender);
 	}
 	if (message.method.startsWith("downloads.")) {
 		return downloads.onMessage(message, sender);
