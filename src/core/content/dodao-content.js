@@ -148,7 +148,7 @@ async function showCollectionSelection(
 async function fetchCollections(spaceId) {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/byte-collection/byte-collections?spaceId=${spaceId}`
+      `https://tidbitshub.org/api/byte-collection/byte-collections?spaceId=${spaceId}`
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -332,7 +332,7 @@ function showCreateCollectionScreen(
 async function createCollection(name, description, spaceId, apiKey) {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/${spaceId}/byte-collections`,
+      `https://tidbitshub.org/api/${spaceId}/byte-collections`,
       {
         method: "POST",
         headers: {
@@ -494,7 +494,7 @@ function setupBottomBarForDemos(
     "choose-collection-button",
     () => {
       browser.runtime.sendMessage({
-        method: "dodaoBackground.changeCollection",
+        method: "dodaoBackground.changeCollectionClicked",
       });
     }
   );
@@ -561,7 +561,7 @@ function setupBottomBarWithDemo(
     "choose-another-button",
     async () => {
       browser.runtime.sendMessage({
-        method: "dodaoBackground.changeDemo",
+        method: "dodaoBackground.changeDemoClicked",
         data: {
           selectedClickableDemo: null,
           selectedTidbitCollection: selectedTidbitCollection,
@@ -670,7 +670,7 @@ async function createDemo(
 
   try {
     const response = await fetch(
-      `http://localhost:3000/api/${spaceId}/clickable-demos/${demoId}`,
+      `https://tidbitshub.org/api/${spaceId}/clickable-demos/${demoId}`,
       {
         method: "POST",
         headers: {
@@ -733,7 +733,7 @@ function addLogoutButton() {
 
 async function captureScreenHtml(spaceId, apiKey, demo, collection) {
   const demoId = demo.demoId;
-  const apiUrl = `http://localhost:3000/api/${spaceId}/html-captures/${demoId}`;
+  const apiUrl = `https://tidbitshub.org/api/${spaceId}/html-captures/${demoId}`;
   let existingFiles = [];
   try {
     const response = await fetch(apiUrl, {

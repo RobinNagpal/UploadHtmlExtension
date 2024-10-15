@@ -353,7 +353,7 @@ function sendSuccessMessage(message) {
 
 // Helper function to get a signed URL for uploading
 async function getSignedUrl(spaceId, apiKey, input) {
-  const response = await fetch("http://localhost:3000/api/s3-signed-urls", {
+  const response = await fetch("https://tidbitshub.org/api/s3-signed-urls", {
     method: "POST",
     headers: {
       "X-API-KEY": apiKey,
@@ -584,7 +584,7 @@ async function uploadScreenshot(screenshotFile, apiKey, spaceId, input) {
 async function saveDodaoCapture(input, spaceId, apiKey) {
   console.log("Saving DoDAO capture", input);
   const response = await fetch(
-    `http://localhost:3000/api/${spaceId}/html-captures`,
+    `https://tidbitshub.org/api/${spaceId}/html-captures`,
     {
       method: "POST",
       headers: {
