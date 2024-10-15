@@ -9,6 +9,14 @@ browser.runtime.onMessage.addListener(async (message) => {
     showsaveClickableDemoScreen(message);
   }
   if (message.method === "dodaoContent.renderBottomBar") {
+    if (message.data.screenCaptured) {
+      hideLoader();
+      showSuccessNotification("Screen captured successfully");
+    }
+    else if(message.data.errorCaptured) {
+      hideLoader();
+      showErrorNotification(message.data.errorCaptured);
+    }
     setupBottomBarWithDemo(
       message.data.spaceId,
       message.data.apiKey,
@@ -27,6 +35,9 @@ browser.runtime.onMessage.addListener(async (message) => {
         message.data.selectedTidbitCollection
       );
     }
+  }
+  if(message.method === "dodaoContent.showLoader") {
+    showLoader();
   }
 });
 
@@ -137,7 +148,7 @@ async function showCollectionSelection(
 async function fetchCollections(spaceId) {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/byte-collection/byte-collections?spaceId=${spaceId}`
+      `https://tidbitshub.org/api/byte-collection/byte-collections?spaceId=${spaceId}`
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -321,7 +332,7 @@ function showCreateCollectionScreen(
 async function createCollection(name, description, spaceId, apiKey) {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/${spaceId}/byte-collections`,
+      `https://tidbitshub.org/api/${spaceId}/byte-collections`,
       {
         method: "POST",
         headers: {
@@ -659,7 +670,7 @@ async function createDemo(
 
   try {
     const response = await fetch(
-      `http://localhost:3000/api/${spaceId}/clickable-demos/${demoId}`,
+      `https://tidbitshub.org/api/${spaceId}/clickable-demos/${demoId}`,
       {
         method: "POST",
         headers: {
@@ -722,7 +733,7 @@ function addLogoutButton() {
 
 async function captureScreenHtml(spaceId, apiKey, demo, collection) {
   const demoId = demo.demoId;
-  const apiUrl = `http://localhost:3000/api/${spaceId}/html-captures/${demoId}`;
+  const apiUrl = `https://tidbitshub.org/api/${spaceId}/html-captures/${demoId}`;
   let existingFiles = [];
   try {
     const response = await fetch(apiUrl, {
@@ -1218,7 +1229,9 @@ function createNewEntityId(entityName, spaceId) {
     .substring(0, 4)}`;
 }
 
-function showErrorNotification(errorMessage) {
+function showNotification(message, type = "error") {
+  const backgroundColor = type === "success" ? "#4CAF50" : "#f44336"; // Green for success, red for error
+
   // Create a style element to hold the CSS
   const style = document.createElement("style");
   style.innerHTML = `
@@ -1227,7 +1240,7 @@ function showErrorNotification(errorMessage) {
           top: 20px;
           right: 20px;
           z-index: 9999; /* High z-index for visibility */
-          background-color: #f44336; /* Red background for errors */
+          background-color: ${backgroundColor}; /* Dynamic background color */
           color: white;
           padding: 15px;
           border-radius: 5px;
@@ -1247,7 +1260,7 @@ function showErrorNotification(errorMessage) {
   // Create the notification element
   const notification = document.createElement("div");
   notification.className = "notification";
-  notification.innerText = errorMessage;
+  notification.innerText = message;
 
   // Append to body
   const modalWrapper = document.querySelector(
@@ -1282,4 +1295,80 @@ function showErrorNotification(errorMessage) {
       }, 500);
     }
   }, 5000); // Duration to display the notification
+}
+
+function showErrorNotification(errorMessage) {
+  showNotification(errorMessage, "error");
+}
+
+function showSuccessNotification(successMessage) {
+  showNotification(successMessage, "success");
+}
+
+function showLoader() {
+  // Create the loader element
+  const loader = document.createElement("div");
+  loader.className = "loader";
+
+  // Create the loader background
+  const loaderBackground = document.createElement("div");
+  loaderBackground.className = "loader-background";
+
+  // Append the loader to the loader background
+  loaderBackground.appendChild(loader);
+
+  // Append the loader background to the body
+  document.body.appendChild(loaderBackground);
+
+  // Add styles for the loader and background
+  const style = document.createElement("style");
+  style.textContent = `
+    .loader-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999; /* High z-index for visibility */
+    }
+    .loader {
+      border: 8px solid #f3f3f3; /* Light grey */
+      border-top: 8px solid #3498db; /* Blue */
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+    .loader-text {
+      margin-top: 20px;
+      color: #fff;
+      font-size: 18px;
+      font-family: Arial, sans-serif;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Add loader text
+  const loaderText = document.createElement("div");
+  loaderText.className = "loader-text";
+  loaderText.textContent = "Uploading...";
+
+  // Append loader text to loader background
+  loaderBackground.appendChild(loaderText);
+}
+
+function hideLoader() {
+  const loaderBackground = document.querySelector(".loader-background");
+  if (loaderBackground) {
+    loaderBackground.remove();
+  }
 }

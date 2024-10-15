@@ -30,9 +30,6 @@ export async function onMessage(message, sender) {
   if (message.method.endsWith("cancelCaptureHtmlScreenClicked")) {
     cancelCaptureHtmlScreenClicked(message);
   }
-  if (message.method.endsWith("refresh")) {
-    refresh();
-  }
 }
 
 export async function dodaoExtensionIconClicked(tab) {
@@ -100,6 +97,7 @@ function logout() {
     "apiKey",
     "selectedClickableDemo",
     "selectedTidbitCollection",
+    "dodaoExtActiveTabId",
   ]);
   sendMethodMessage("dodaoContent.captureApiKey");
 }
@@ -172,7 +170,7 @@ function saveSpaceIdAndApiKey(message) {
   }
 }
 
-async function refresh() {
+async function screenCaptured() {
   const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
     await getFromStorage([
       "spaceId",
@@ -186,6 +184,7 @@ async function refresh() {
     apiKey,
     selectedClickableDemo,
     selectedTidbitCollection,
+    screenCaptured:true,
   });
 }
 
@@ -236,7 +235,8 @@ export async function uploadFileToDodao(
   blob,
   callbackFunction
 ) {
-  console.log("Uploading file to DoDAO", captureHtmlScreenFileName, blob);
+  sendMethodMessage("dodaoContent.showLoader");
+
   const fileName = captureHtmlScreenFileName;
   if (!fileName) {
     await sendErrorMessage("Enter File Name");
@@ -295,12 +295,10 @@ export async function uploadFileToDodao(
     const htmlContentForScreenshot = await fetch(fileUrl).then((response) =>
       response.text()
     );
-    sendSuccessMessage("File uploaded successfully");
     // Optionally, execute the callback function
     callbackFunction(spaceId, apiKey, selectedClickableDemo, fileUrl, fileName);
+    await screenCaptured()
   } catch (error) {
-    console.error("Error uploading file:", error);
-    await sendErrorMessage("Failed to upload the File");
   }
 }
 
@@ -355,7 +353,7 @@ function sendSuccessMessage(message) {
 
 // Helper function to get a signed URL for uploading
 async function getSignedUrl(spaceId, apiKey, input) {
-  const response = await fetch("http://localhost:3000/api/s3-signed-urls", {
+  const response = await fetch("https://tidbitshub.org/api/s3-signed-urls", {
     method: "POST",
     headers: {
       "X-API-KEY": apiKey,
@@ -365,7 +363,6 @@ async function getSignedUrl(spaceId, apiKey, input) {
   });
 
   if (!response.ok) {
-    await sendErrorMessage("Failed to upload the File");
     return null;
   }
 
@@ -509,24 +506,14 @@ export async function getScreenshot(spaceId, apiKey, demo, url, name) {
           };
           console.log(captureInput);
           await saveDodaoCapture(captureInput, spaceId, apiKey);
-          browser.runtime.sendMessage({method:"dodaoBackground.refresh"})
         }
       } catch (error) {
-        console.error("Error capturing screenshot:", error);
-        chrome.runtime.sendMessage({
-          action: "screenshotError",
-          error: error.message,
-        });
       } finally {
         document.body.removeChild(iframe); // Clean up the iframe after use
       }
     };
   } catch (error) {
     console.error("Error fetching or processing the content:", error);
-    chrome.runtime.sendMessage({
-      action: "screenshotError",
-      error: error.message,
-    });
   }
 }
 
@@ -597,7 +584,7 @@ async function uploadScreenshot(screenshotFile, apiKey, spaceId, input) {
 async function saveDodaoCapture(input, spaceId, apiKey) {
   console.log("Saving DoDAO capture", input);
   const response = await fetch(
-    `http://localhost:3000/api/${spaceId}/html-captures`,
+    `https://tidbitshub.org/api/${spaceId}/html-captures`,
     {
       method: "POST",
       headers: {
@@ -609,9 +596,7 @@ async function saveDodaoCapture(input, spaceId, apiKey) {
   );
 
   if (!response.ok) {
-    console.log(12321);
-    await sendErrorMessage("Failed to update capture");
-    return null;
+    throw new Error("Failed to save the capture");
   }
   const data = await response.json();
   return data;
