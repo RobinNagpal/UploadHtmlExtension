@@ -26,6 +26,7 @@
 import * as button from "./ui-button.js";
 import * as menus from "./ui-menus.js";
 import * as command from "./ui-commands.js";
+import * as dodaoUpload from "./../../core/bg/dodao-upload.js";
 
 export {
 	onMessage,
@@ -47,6 +48,7 @@ function init(businessApi) {
 	menus.init(businessApi);
 	button.init(businessApi);
 	command.init(businessApi);
+	dodaoUpload.init(businessApi);
 }
 
 function onMessage(message, sender) {

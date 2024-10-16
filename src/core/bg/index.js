@@ -38,10 +38,16 @@ import * as tabsData from "./tabs-data.js";
 import * as tabs from "./tabs.js";
 import * as externalMesssages from "./external-messages.js";
 import * as ui from "./../../ui/bg/index.js";
+import * as dodaoBackground from "./dodao-upload.js";
 
 browser.runtime.onMessage.addListener((message, sender) => {
+	console.log("message.method", message.method);
+	console.log('message', message);
 	if (message.method.startsWith("tabs.")) {
 		return tabs.onMessage(message, sender);
+	}
+	if (message.method.startsWith("dodaoBackground.")) { 
+		dodaoBackground.onMessage(message, sender);
 	}
 	if (message.method.startsWith("downloads.")) {
 		return downloads.onMessage(message, sender);

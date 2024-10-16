@@ -111,7 +111,8 @@ export default [{
 		file: "lib/single-file-extension.js",
 		format: "iife",
 		plugins: []
-	}]
+	}],
+	plugins:[resolve()]
 }, {
 	input: ["src/ui/content/content-ui-editor-init-web.js"],
 	output: [{
@@ -153,14 +154,17 @@ export default [{
 		file: "lib/single-file-extension-background.js",
 		format: "iife",
 		plugins: []
-	}]
+	}],
+	plugins:[resolve()]
 }, {
 	input: ["src/core/bg/offscreen-document.js"],
 	output: [{
 		file: "lib/single-file-extension-offscreen-document.js",
 		format: "iife",
 		plugins: []
-	}]
+	}],
+	plugins:[resolve()]
+
 }, {
 	input: ["src/lib/single-file/background.js"],
 	output: [{

@@ -111,7 +111,7 @@ const BUTTON_STATES = {
 
 let business;
 
-browser.action.onClicked.addListener(async tab => {
+async function oldListener(tab) {
 	const highlightedTabs = await queryTabs({ currentWindow: true, highlighted: true });
 	if (highlightedTabs.length <= 1) {
 		toggleSaveTab(tab);
@@ -123,9 +123,13 @@ browser.action.onClicked.addListener(async tab => {
 		if (business.isSavingTab(tab)) {
 			business.cancelTab(tab.id);
 		} else {
-			business.saveTabs([tab]);
+			business.saveTabs([tab],{},true);
 		}
 	}
+}
+
+browser.action.onClicked.addListener(async tab => {
+	await business.extensionIconClicked(tab);
 });
 
 export {
