@@ -1,19 +1,23 @@
 import { v4 as uuidv4 } from "uuid";
+import {
+  DODAO_API_BASE_URL,
+  DODAO_S3_BASE_URL,
+} from "../common/dodao-constants.js";
 export function init() {}
-
 browser.runtime.onMessage.addListener(async (message) => {
   if (message.method === "dodaoContent.captureApiKey") {
     showSaveApiKeyAndSpaceIdScreen(message);
+    return {};
   }
   if (message.method === "dodaoContent.selectClickableDemo") {
     showsaveClickableDemoScreen(message);
+    return {};
   }
   if (message.method === "dodaoContent.renderBottomBar") {
     if (message.data.screenCaptured) {
       hideLoader();
       showSuccessNotification("Screen captured successfully");
-    }
-    else if(message.data.errorCaptured) {
+    } else if (message.data.errorCaptured) {
       hideLoader();
       showErrorNotification(message.data.errorCaptured);
     }
@@ -23,6 +27,7 @@ browser.runtime.onMessage.addListener(async (message) => {
       message.data.selectedClickableDemo,
       message.data.selectedTidbitCollection
     );
+    return {};
   }
   if (message.method === "dodaoContent.captureScreenHtml") {
     if (message.data.error) {
@@ -35,9 +40,11 @@ browser.runtime.onMessage.addListener(async (message) => {
         message.data.selectedTidbitCollection
       );
     }
+    return {};
   }
-  if(message.method === "dodaoContent.showLoader") {
+  if (message.method === "dodaoContent.showLoader") {
     showLoader();
+    return {};
   }
 });
 
@@ -148,7 +155,7 @@ async function showCollectionSelection(
 async function fetchCollections(spaceId) {
   try {
     const response = await fetch(
-      `https://tidbitshub.org/api/byte-collection/byte-collections?spaceId=${spaceId}`
+      `${DODAO_API_BASE_URL}/api/byte-collection/byte-collections?spaceId=${spaceId}`
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -332,7 +339,7 @@ function showCreateCollectionScreen(
 async function createCollection(name, description, spaceId, apiKey) {
   try {
     const response = await fetch(
-      `https://tidbitshub.org/api/${spaceId}/byte-collections`,
+      `${DODAO_API_BASE_URL}/api/${spaceId}/byte-collections`,
       {
         method: "POST",
         headers: {
@@ -670,7 +677,7 @@ async function createDemo(
 
   try {
     const response = await fetch(
-      `https://tidbitshub.org/api/${spaceId}/clickable-demos/${demoId}`,
+      `${DODAO_API_BASE_URL}/api/${spaceId}/clickable-demos/${demoId}`,
       {
         method: "POST",
         headers: {
@@ -733,7 +740,7 @@ function addLogoutButton() {
 
 async function captureScreenHtml(spaceId, apiKey, demo, collection) {
   const demoId = demo.demoId;
-  const apiUrl = `https://tidbitshub.org/api/${spaceId}/html-captures/${demoId}`;
+  const apiUrl = `${DODAO_API_BASE_URL}/api/${spaceId}/html-captures/${demoId}`;
   let existingFiles = [];
   try {
     const response = await fetch(apiUrl, {

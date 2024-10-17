@@ -30,7 +30,6 @@ let creating;
 
 export {
 	compressPage,
-	captureScreenshot,
 	processPage,
 	getBlobURL,
 	revokeObjectURL,
@@ -59,10 +58,7 @@ async function processPage(options) {
 	await createOffscreenDocument();
 	return browser.runtime.sendMessage({ method: "processPage", options });
 }
-async function captureScreenshot(spaceId,apiKey,demo,url,name) {
-	await createOffscreenDocument();
-	return browser.runtime.sendMessage({ method: "captureScreenshot", url,apiKey,spaceId,demo,name});
- }
+
 async function revokeObjectURL(url) {
 	await createOffscreenDocument();
 	return browser.runtime.sendMessage({ method: "revokeObjectURL", url });
