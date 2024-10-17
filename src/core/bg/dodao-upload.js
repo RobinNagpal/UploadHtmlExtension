@@ -1,5 +1,5 @@
 import html2canvas from "html2canvas";
-
+import { DODAO_API_BASE_URL } from "../common/dodao-constants.js";
 let business;
 export function init(businessApi) {
   business = businessApi;
@@ -8,27 +8,35 @@ export function init(businessApi) {
 export async function onMessage(message, sender) {
   if (message.method.endsWith("saveSpaceIdAndApiKey")) {
     saveSpaceIdAndApiKey(message);
+    return {};
   }
   if (message.method.endsWith("saveSelectedClickableDemo")) {
     saveSelectedCollectionAndDemoId(message);
+    return {};
   }
   if (message.method.endsWith("logout")) {
     logout();
+    return {};
   }
   if (message.method.endsWith("captureScreenClicked")) {
     captureScreenClicked();
+    return {};
   }
   if (message.method.endsWith("savePage")) {
     savePage(message, sender);
+    return {};
   }
   if (message.method.endsWith("changeCollectionClicked")) {
     changeCollectionClicked();
+    return {};
   }
   if (message.method.endsWith("changeDemoClicked")) {
     changeDemoClicked(message);
+    return {};
   }
   if (message.method.endsWith("cancelCaptureHtmlScreenClicked")) {
     cancelCaptureHtmlScreenClicked(message);
+    return {};
   }
 }
 
@@ -40,7 +48,7 @@ export async function dodaoExtensionIconClicked(tab) {
       "selectedClickableDemo",
       "selectedTidbitCollection",
     ]);
-  chrome.storage.local.set({dodaoExtActiveTabId: tab.id});
+  chrome.storage.local.set({ dodaoExtActiveTabId: tab.id });
   if (!spaceId || !apiKey) {
     sendMethodMessage("dodaoContent.captureApiKey");
   } else if (!selectedClickableDemo || !selectedTidbitCollection) {
@@ -184,7 +192,7 @@ async function screenCaptured() {
     apiKey,
     selectedClickableDemo,
     selectedTidbitCollection,
-    screenCaptured:true,
+    screenCaptured: true,
   });
 }
 
@@ -292,14 +300,19 @@ export async function uploadFileToDodao(
     await uploadFileToSignedUrl(signedUrl, editedFile, file.type);
 
     const fileUrl = getUploadedImageUrlFromSignedUrl(signedUrl);
-    const htmlContentForScreenshot = await fetch(fileUrl).then((response) =>
-      response.text()
-    );
     // Optionally, execute the callback function
-    callbackFunction(spaceId, apiKey, selectedClickableDemo, fileUrl, fileName);
-    await screenCaptured()
-  } catch (error) {
-  }
+    const capture = await callbackFunction(
+      spaceId,
+      apiKey,
+      selectedClickableDemo,
+      fileUrl,
+      fileName,
+      htmlContent
+    );
+    if (capture) {
+      await screenCaptured();
+    }
+  } catch (error) {}
 }
 
 // Helper function to read a file as text
@@ -353,7 +366,7 @@ function sendSuccessMessage(message) {
 
 // Helper function to get a signed URL for uploading
 async function getSignedUrl(spaceId, apiKey, input) {
-  const response = await fetch("https://tidbitshub.org/api/s3-signed-urls", {
+  const response = await fetch(`${DODAO_API_BASE_URL}/api/s3-signed-urls`, {
     method: "POST",
     headers: {
       "X-API-KEY": apiKey,
@@ -387,6 +400,7 @@ function getUploadedImageUrlFromSignedUrl(signedUrl) {
 }
 
 function injectScriptLinkTags(htmlContent) {
+  console.log("Injecting script and link tags into HTML content");
   const insertionIndex = findInsertionIndex(htmlContent);
 
   if (insertionIndex !== undefined) {
@@ -462,8 +476,14 @@ function insertTagsIntoHtml(htmlContent, insertionIndex, tags) {
   ].join("");
 }
 
-export async function getScreenshot(spaceId, apiKey, demo, url, name) {
-  console.log(3213123);
+export async function getScreenshot(
+  spaceId,
+  apiKey,
+  demo,
+  url,
+  name,
+  htmlContent
+) {
   const objectId = demo.title.replace(/\s+/g, "-");
   const demoId = demo.demoId;
 
@@ -473,47 +493,56 @@ export async function getScreenshot(spaceId, apiKey, demo, url, name) {
     objectId: objectId,
     name: `${name}_screenshot`,
   };
+
   try {
-    const htmlContent = await fetchHtmlContent(url);
     const iframe = createIframeWithContent(htmlContent);
     document.body.appendChild(iframe);
 
-    iframe.onload = async () => {
-      try {
-        await waitForResourcesToLoad(1000);
-        const canvas = await captureScreenshot(iframe);
+    return new Promise((resolve, reject) => {
+      iframe.onload = async () => {
+        try {
+          await waitForResourcesToLoad(1000);
+          const canvas = await captureScreenshot(iframe);
 
-        if (canvas.width > 0 && canvas.height > 0) {
-          const screenshotFile = await canvasToFile(
-            canvas,
-            "screenshot.png",
-            "image/png"
-          );
-          console.log(screenshotFile);
-          console.log(apiKey);
-          const screenshotUrl = await uploadScreenshot(
-            screenshotFile,
-            apiKey,
-            spaceId,
-            input
-          );
-
-          const captureInput = {
-            clickableDemoId: demoId,
-            fileName: name,
-            fileUrl: url,
-            fileImageUrl: screenshotUrl,
-          };
-          console.log(captureInput);
-          await saveDodaoCapture(captureInput, spaceId, apiKey);
+          if (canvas.width > 0 && canvas.height > 0) {
+            const screenshotFile = await canvasToFile(
+              canvas,
+              "screenshot.png",
+              "image/png"
+            );
+            const screenshotUrl = await uploadScreenshot(
+              screenshotFile,
+              apiKey,
+              spaceId,
+              input
+            );
+            const captureInput = {
+              clickableDemoId: demoId,
+              fileName: name,
+              fileUrl: url,
+              fileImageUrl: screenshotUrl,
+            };
+            const DodaoCapture = await saveDodaoCapture(
+              captureInput,
+              spaceId,
+              apiKey
+            );
+            resolve(DodaoCapture);
+          } else {
+            reject(new Error("Canvas has invalid dimensions"));
+          }
+        } catch (error) {
+          console.error("Error capturing screenshot:", error);
+          reject(error);
+        } finally {
+          console.log("Removing iframe");
+          document.body.removeChild(iframe); // Clean up the iframe after use
         }
-      } catch (error) {
-      } finally {
-        document.body.removeChild(iframe); // Clean up the iframe after use
-      }
-    };
+      };
+    });
   } catch (error) {
     console.error("Error fetching or processing the content:", error);
+    throw error;
   }
 }
 
@@ -548,7 +577,7 @@ function waitForResourcesToLoad(delay) {
 // Helper function to capture screenshot from an iframe
 async function captureScreenshot(iframe) {
   const iframeDocument = iframe.contentDocument;
-  return await html2canvas(iframeDocument.body, {
+  const canvas = await html2canvas(iframeDocument.body, {
     width: 1920,
     height: 1080,
     windowWidth: 1920,
@@ -556,6 +585,7 @@ async function captureScreenshot(iframe) {
     useCORS: true,
     allowTaint: true,
   });
+  return canvas;
 }
 
 // Helper function to convert canvas to a File object
@@ -584,7 +614,7 @@ async function uploadScreenshot(screenshotFile, apiKey, spaceId, input) {
 async function saveDodaoCapture(input, spaceId, apiKey) {
   console.log("Saving DoDAO capture", input);
   const response = await fetch(
-    `https://tidbitshub.org/api/${spaceId}/html-captures`,
+    `${DODAO_API_BASE_URL}/api/${spaceId}/html-captures`,
     {
       method: "POST",
       headers: {
@@ -599,6 +629,7 @@ async function saveDodaoCapture(input, spaceId, apiKey) {
     throw new Error("Failed to save the capture");
   }
   const data = await response.json();
+  console.log("DoDAO capture saved successfully", data);
   return data;
 }
 

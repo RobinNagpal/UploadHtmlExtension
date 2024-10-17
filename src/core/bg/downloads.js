@@ -244,8 +244,8 @@ async function downloadContent(message, tab) {
 				});
 			} else if(message.saveWithTidbitsHub){
 				const blob = new Blob([message.content], { type: message.mimeType });
-				uploadFileToDodao(message.captureHtmlScreenFileName, blob, (spaceId,apiKey,demo,url,name) => {
-					offscreen.captureScreenshot(spaceId,apiKey,demo,url,name)
+				uploadFileToDodao(message.captureHtmlScreenFileName, blob, async (spaceId, apiKey, demo, url, name, htmlContent) => {
+					return await offscreen.captureScreenshot(spaceId, apiKey, demo, url, name, htmlContent);
 				});
 			} else {
 				response = await downloadPage(message, {
