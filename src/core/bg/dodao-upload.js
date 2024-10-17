@@ -1,5 +1,5 @@
-import html2canvas from "html2canvas";
-import { DODAO_API_BASE_URL } from "../common/dodao-constants.js";
+import {DODAO_API_BASE_URL} from "../common/dodao-constants.js";
+
 let business;
 export function init(businessApi) {
   business = businessApi;
@@ -241,7 +241,7 @@ async function cancelCaptureHtmlScreenClicked(message) {
 export async function uploadFileToDodao(
   captureHtmlScreenFileName,
   blob,
-  callbackFunction
+  screenshotBlob
 ) {
   sendMethodMessage("dodaoContent.showLoader");
 
@@ -253,9 +253,11 @@ export async function uploadFileToDodao(
 
   try {
     // Convert blob to file using user input for file name
-    const file = new File([blob], fileName, { type: "text/html" });
+    const file = new File([blob], fileName + ".html", { type: "text/html" });
+    const screenShotFile = new File([screenshotBlob], fileName + "screenshot.png", { type: "image/png" });
     const htmlContent = await readFileAsText(file);
 
+    console.log('screenShotFile', screenShotFile);
     // Manipulate the HTML
     const modifiedHtml = injectScriptLinkTags(htmlContent);
 
@@ -272,14 +274,10 @@ export async function uploadFileToDodao(
         "selectedTidbitCollection",
       ]);
     const demo = selectedClickableDemo;
+    console.log('selectedClickableDemo', selectedClickableDemo)
     const objectId = demo.title.replace(/\s+/g, "-");
 
-    const input = {
-      imageType: "ClickableDemos",
-      contentType: file.type,
-      objectId: objectId,
-      name: file.name,
-    };
+
     console.log(
       "Uploading file to DoDAO",
       spaceId,
@@ -293,23 +291,53 @@ export async function uploadFileToDodao(
     }
 
     // Get signed URL for uploading the file
-    const signedUrl = await getSignedUrl(spaceId, apiKey, input);
-    if (!signedUrl) throw new Error("Failed to obtain signed URL");
+
+    const htmlFileSignedUrlInput = {
+      imageType: "ClickableDemoHtmlCapture",
+      contentType: file.type,
+      objectId: objectId,
+      name: file.name,
+    };
+
+    const htmlSignedUrl = await getSignedUrl(spaceId, apiKey, htmlFileSignedUrlInput);
+    if (!htmlSignedUrl) throw new Error("Failed to obtain signed URL");
 
     // Upload the file to the signed URL
-    await uploadFileToSignedUrl(signedUrl, editedFile, file.type);
+    await uploadFileToSignedUrl(htmlSignedUrl, editedFile, file.type);
 
-    const fileUrl = getUploadedImageUrlFromSignedUrl(signedUrl);
+    const fileUrl = getUploadedImageUrlFromSignedUrl(htmlSignedUrl);
     // Optionally, execute the callback function
-    const capture = await callbackFunction(
+
+    const screenshotSignedUrlInput = {
+      imageType: "ClickableDemoHtmlCapture",
+      contentType: screenShotFile.type,
+      objectId: objectId,
+      name: screenShotFile.name,
+    };
+
+    const htmlScreenshotSignedUrl = await getSignedUrl(spaceId, apiKey, screenshotSignedUrlInput);
+    if (!htmlScreenshotSignedUrl) throw new Error("Failed to obtain signed URL");
+
+    // Upload the file to the signed URL
+    await uploadFileToSignedUrl(htmlScreenshotSignedUrl, screenShotFile, screenShotFile.type);
+
+    const fileImageUrl = getUploadedImageUrlFromSignedUrl(htmlScreenshotSignedUrl);
+    // Optionally, execute the callback function
+
+    console.log("File uploaded successfully", fileUrl, fileImageUrl);
+    const captureInput = {
+      clickableDemoId: demo.demoId,
+      fileName: fileName,
+      fileUrl: fileUrl,
+      fileImageUrl: fileImageUrl,
+    };
+    const dodaoCapture = await saveDodaoCapture(
+      captureInput,
       spaceId,
-      apiKey,
-      selectedClickableDemo,
-      fileUrl,
-      fileName,
-      htmlContent
+      apiKey
     );
-    if (capture) {
+
+    if (dodaoCapture) {
       await screenCaptured();
     }
   } catch (error) {}
@@ -346,17 +374,6 @@ function sendErrorMessage(message) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) {
         chrome.tabs.sendMessage(tabs[0].id, { error: message }, resolve);
-      } else {
-        resolve();
-      }
-    });
-  });
-}
-function sendSuccessMessage(message) {
-  return new Promise((resolve) => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, { success: message }, resolve);
       } else {
         resolve();
       }
@@ -476,140 +493,6 @@ function insertTagsIntoHtml(htmlContent, insertionIndex, tags) {
   ].join("");
 }
 
-export async function getScreenshot(
-  spaceId,
-  apiKey,
-  demo,
-  url,
-  name,
-  htmlContent
-) {
-  const objectId = demo.title.replace(/\s+/g, "-");
-  const demoId = demo.demoId;
-
-  const input = {
-    imageType: "ClickableDemoHtmlCapture",
-    contentType: "image/png",
-    objectId: objectId,
-    name: `${name}_screenshot`,
-  };
-
-  try {
-    const iframe = createIframeWithContent(htmlContent);
-    document.body.appendChild(iframe);
-
-    return new Promise((resolve, reject) => {
-      iframe.onload = async () => {
-        try {
-          await waitForResourcesToLoad(1000);
-          const canvas = await captureScreenshot(iframe);
-
-          if (canvas.width > 0 && canvas.height > 0) {
-            const screenshotFile = await canvasToFile(
-              canvas,
-              "screenshot.png",
-              "image/png"
-            );
-            const screenshotUrl = await uploadScreenshot(
-              screenshotFile,
-              apiKey,
-              spaceId,
-              input
-            );
-            const captureInput = {
-              clickableDemoId: demoId,
-              fileName: name,
-              fileUrl: url,
-              fileImageUrl: screenshotUrl,
-            };
-            const DodaoCapture = await saveDodaoCapture(
-              captureInput,
-              spaceId,
-              apiKey
-            );
-            resolve(DodaoCapture);
-          } else {
-            reject(new Error("Canvas has invalid dimensions"));
-          }
-        } catch (error) {
-          console.error("Error capturing screenshot:", error);
-          reject(error);
-        } finally {
-          console.log("Removing iframe");
-          document.body.removeChild(iframe); // Clean up the iframe after use
-        }
-      };
-    });
-  } catch (error) {
-    console.error("Error fetching or processing the content:", error);
-    throw error;
-  }
-}
-
-// Helper function to fetch HTML content from a URL
-async function fetchHtmlContent(url) {
-  const response = await fetch(url);
-
-  if (response.status !== 200) {
-    throw new Error(`Failed to fetch the page. Status: ${response.status}`);
-  }
-
-  const buffer = await response.arrayBuffer();
-  const decoder = new TextDecoder("utf-8");
-  return decoder.decode(buffer);
-}
-
-// Helper function to create an iframe with given HTML content
-function createIframeWithContent(htmlContent) {
-  const iframe = document.createElement("iframe");
-  iframe.style.width = "1920px";
-  iframe.style.height = "1080px";
-  iframe.style.border = "none";
-  iframe.srcdoc = htmlContent;
-  return iframe;
-}
-
-// Helper function to wait for resources to load
-function waitForResourcesToLoad(delay) {
-  return new Promise((resolve) => setTimeout(resolve, delay));
-}
-
-// Helper function to capture screenshot from an iframe
-async function captureScreenshot(iframe) {
-  const iframeDocument = iframe.contentDocument;
-  const canvas = await html2canvas(iframeDocument.body, {
-    width: 1920,
-    height: 1080,
-    windowWidth: 1920,
-    windowHeight: 1080,
-    useCORS: true,
-    allowTaint: true,
-  });
-  return canvas;
-}
-
-// Helper function to convert canvas to a File object
-function canvasToFile(canvas, fileName, fileType) {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) {
-        resolve(new File([blob], fileName, { type: fileType }));
-      } else {
-        reject(new Error("Canvas is empty"));
-      }
-    }, fileType);
-  });
-}
-
-// Helper function to upload the screenshot and get its URL
-async function uploadScreenshot(screenshotFile, apiKey, spaceId, input) {
-  const signedUrl = await getSignedUrl(spaceId, apiKey, input);
-  if (!signedUrl) throw new Error("Failed to obtain signed URL");
-
-  await uploadFileToSignedUrl(signedUrl, screenshotFile, screenshotFile.type);
-  const screenshotUrl = getUploadedImageUrlFromSignedUrl(signedUrl);
-  return screenshotUrl;
-}
 
 async function saveDodaoCapture(input, spaceId, apiKey) {
   console.log("Saving DoDAO capture", input);

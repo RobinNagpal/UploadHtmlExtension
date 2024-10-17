@@ -87,11 +87,9 @@ async function onTabUpdated(tabId, changeInfo) {
 			ui.onTabActivated(tab);
 		}
 		const { dodaoExtActiveTabId } = await getFromStorage(["dodaoExtActiveTabId"]);
-		if(tabId===dodaoExtActiveTabId ) {
+		if(tabId === dodaoExtActiveTabId ) {
 			business.extensionIconClicked(tab);
 		}
-		// if dodaoExtActiveTabId is same as the current tabId, then
-		// here can we call business.extensionIconClicked(tab)
 
 	}
 	if (changeInfo.discarded) {

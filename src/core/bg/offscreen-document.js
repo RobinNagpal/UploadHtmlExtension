@@ -26,19 +26,11 @@
 import "./../../../lib/chrome-browser-polyfill.js";
 import { getPageData, compress } from "./../../index.js";
 import * as yabson from "./../../lib/yabson/yabson.js";
-import { getScreenshot } from "./dodao-upload.js";
-import { get } from "./tabs-data.js";
+
 const parsers = new Map();
 
-browser.runtime.onMessage.addListener(async ({ method, pageData, url, data, mimeType, options, width, height, tabId, apiKey, spaceId,demo, name,htmlContent }) => {
-	if (method == "captureScreenshot") {
-		console.log(21312312312)
-		const capture = await getScreenshot(spaceId, apiKey, demo, url, name, htmlContent);
-		;
-		return capture
-
-    }
-    if (method == "processPage") {
+browser.runtime.onMessage.addListener(async ({ method, pageData, url, data, mimeType, options, width, height, tabId }) => {
+	if (method == "processPage") {
 		const result = await getPageData(options, null, null, { fetch });
 		const blob = new Blob([typeof result.content == "string" ? result.content : new Uint8Array(result.content)], { type: result.mimeType });
 		return {
