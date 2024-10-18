@@ -244,9 +244,11 @@ async function downloadContent(message, tab) {
 				});
 			} else if(message.saveWithTidbitsHub){
 				const blob = new Blob([message.content], { type: message.mimeType });
-				uploadFileToDodao(message.captureHtmlScreenFileName, blob, (spaceId,apiKey,demo,url,name) => {
-					offscreen.captureScreenshot(spaceId,apiKey,demo,url,name)
-				});
+
+				const screenshotBlob = new Blob([await (await fetch(message.dodaoScreenshotBlobUrl)).blob()], { type: "image/png" });
+
+				await uploadFileToDodao(message.captureHtmlScreenFileName, blob, screenshotBlob);
+
 			} else {
 				response = await downloadPage(message, {
 					confirmFilename: message.confirmFilename,

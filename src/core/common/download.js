@@ -26,6 +26,8 @@
 import * as yabson from "./../../lib/yabson/yabson.js";
 import * as ui from "./../../ui/content/content-ui.js";
 import { getSharePageBar, setLabels } from "./../../ui/common/common-content-ui.js";
+import html2canvas from "html2canvas";
+import {getDodaoScreenshotBlobUrl} from "./dodao-screenshot.js";
 
 const MAX_CONTENT_SIZE = 16 * (1024 * 1024);
 
@@ -166,8 +168,14 @@ async function downloadPage(pageData, options) {
 			if (filename) {
 				message.filename = pageData.filename = filename;
 				pageData.filename = options.captureHtmlScreenFileName;
+
+				if(options.saveWithTidbitsHub) {
+					message.dodaoScreenshotBlobUrl = await getDodaoScreenshotBlobUrl(pageData.content);
+				}
+
 				const blobURL = URL.createObjectURL(new Blob([pageData.content], { type: pageData.mimeType }));
 				message.blobURL = blobURL;
+				console.log('message in download.js', message);
 				const result = await browser.runtime.sendMessage(message);
 				URL.revokeObjectURL(blobURL);
 				if (result.error) {
