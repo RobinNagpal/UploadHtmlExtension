@@ -30,6 +30,7 @@ import * as editor from "./editor.js";
 import * as tabsData from "./tabs-data.js";
 import * as ui from "./../../ui/bg/index.js";
 import * as offscreen from "./offscreen.js";
+import { getFromStorage } from "./dodao-upload.js";
 
 const DELAY_MAYBE_INIT = 1500;
 
@@ -85,6 +86,11 @@ async function onTabUpdated(tabId, changeInfo) {
 			await tabsData.set(allTabsData);
 			ui.onTabActivated(tab);
 		}
+		const { dodaoExtActiveTabId } = await getFromStorage(["dodaoExtActiveTabId"]);
+		if(tabId === dodaoExtActiveTabId ) {
+			business.extensionIconClicked(tab);
+		}
+
 	}
 	if (changeInfo.discarded) {
 		autosave.onTabDiscarded(tabId);

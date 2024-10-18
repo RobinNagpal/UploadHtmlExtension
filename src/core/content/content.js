@@ -28,7 +28,7 @@ import { fetch, frameFetch } from "./../../lib/single-file/fetch/content/content
 import * as ui from "./../../ui/content/content-ui.js";
 import { onError, getOpenFileBar, openFile, setLabels } from "./../../ui/common/common-content-ui.js";
 import * as yabson from "./../../lib/yabson/yabson.js";
-
+import * as dodaoContent from "./dodao-content.js"
 const singlefile = globalThis.singlefile;
 const bootstrap = globalThis.singlefileBootstrap;
 
@@ -39,7 +39,7 @@ const SHARE_SELECTION_BUTTON_MESSAGE = browser.i18n.getMessage("topPanelShareSel
 const ERROR_TITLE_MESSAGE = browser.i18n.getMessage("topPanelError");
 
 let processor, processing, downloadParser, openFileInfobar, scrollY, transform, overflow;
-
+dodaoContent.init();
 setLabels({
 	EMBEDDED_IMAGE_BUTTON_MESSAGE,
 	SHARE_PAGE_BUTTON_MESSAGE,
@@ -50,6 +50,7 @@ setLabels({
 if (!bootstrap || !bootstrap.initializedSingleFile) {
 	singlefile.init({ fetch, frameFetch });
 	browser.runtime.onMessage.addListener(message => {
+		console.log("message.method", message);
 		if (message.method == "content.save" ||
 			message.method == "content.cancelSave" ||
 			message.method == "content.download" ||
@@ -58,7 +59,9 @@ if (!bootstrap || !bootstrap.initializedSingleFile) {
 			message.method == "content.prompt" ||
 			message.method == "content.beginScrollTo" ||
 			message.method == "content.scrollTo" ||
-			message.method == "content.endScrollTo") {
+			message.method == "content.endScrollTo" ||
+			message.error ||
+			message.success) {
 			return onMessage(message);
 		}
 	});
@@ -148,6 +151,7 @@ async function onMessage(message) {
 }
 
 async function savePage(message) {
+	console.log(message)
 	const pingInterval = setInterval(() => {
 		browser.runtime.sendMessage({ method: "ping" }).then(() => { });
 	}, 15000);
@@ -195,7 +199,7 @@ async function savePage(message) {
 async function processPage(options) {
 	const frames = singlefile.processors.frameTree;
 	let framesSessionId;
-	options.keepFilename = options.saveToGDrive || options.saveToGitHub || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3;
+	options.keepFilename = options.saveToGDrive || options.saveToGitHub || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3 || options.saveWithTidbitsHub;
 	singlefile.helper.initDoc(document);
 	ui.onStartPage(options);
 	processor = new singlefile.SingleFile(options);

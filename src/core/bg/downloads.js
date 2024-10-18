@@ -40,7 +40,7 @@ import { download } from "./download-util.js";
 import * as yabson from "./../../lib/yabson/yabson.js";
 import { RestFormApi } from "../../lib/../lib/rest-form-api/index.js";
 import * as offscreen from "./offscreen.js";
-
+import { uploadFileToDodao } from "./dodao-upload.js";
 const partialContents = new Map();
 const tabData = new Map();
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
@@ -242,6 +242,13 @@ async function downloadContent(message, tab) {
 					filenameConflictAction: message.filenameConflictAction,
 					prompt
 				});
+			} else if(message.saveWithTidbitsHub){
+				const blob = new Blob([message.content], { type: message.mimeType });
+
+				const screenshotBlob = new Blob([await (await fetch(message.dodaoScreenshotBlobUrl)).blob()], { type: "image/png" });
+
+				await uploadFileToDodao(message.captureHtmlScreenFileName, blob, screenshotBlob);
+
 			} else {
 				response = await downloadPage(message, {
 					confirmFilename: message.confirmFilename,

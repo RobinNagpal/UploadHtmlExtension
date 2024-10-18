@@ -5,17 +5,19 @@
 	"author": "Gildas Lormeau",
 	"license": "AGPL-3.0-or-later",
 	"scripts": {
-		"dev": "npx rollup -c rollup.config.dev.js",
+		"dev": "npx rollup -c rollup.config.dev.js --watch",
 		"build": "./build-extension.sh"
 	},
 	"type": "module",
 	"dependencies": {
-		"single-file-core": "1.5.16"
+		"html2canvas": "^1.4.1",
+		"single-file-core": "1.5.16",
+		"uuid": "^10.0.0"
 	},
 	"devDependencies": {
-		"rollup": "4.20.0",
 		"@rollup/plugin-node-resolve": "15.2.3",
-		"@rollup/plugin-terser": "0.4.4"
+		"@rollup/plugin-terser": "0.4.4",
+		"rollup": "4.20.0"
 	},
 	"overrides": {
 		"terser": "^5.15.0"

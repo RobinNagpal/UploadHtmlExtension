@@ -26,6 +26,8 @@
 import * as yabson from "./../../lib/yabson/yabson.js";
 import * as ui from "./../../ui/content/content-ui.js";
 import { getSharePageBar, setLabels } from "./../../ui/common/common-content-ui.js";
+import html2canvas from "html2canvas";
+import {getDodaoScreenshotBlobUrl} from "./dodao-screenshot.js";
 
 const MAX_CONTENT_SIZE = 16 * (1024 * 1024);
 
@@ -114,7 +116,9 @@ async function downloadPage(pageData, options) {
 		S3Region: options.S3Region,
 		S3Bucket: options.S3Bucket,
 		S3AccessKey: options.S3AccessKey,
-		S3SecretKey: options.S3SecretKey
+		S3SecretKey: options.S3SecretKey,
+		saveWithTidbitsHub: options.saveWithTidbitsHub,
+		captureHtmlScreenFileName: options.captureHtmlScreenFileName,
 	};
 	const pingInterval = setInterval(() => {
 		browser.runtime.sendMessage({ method: "ping" }).then(() => { });
@@ -163,8 +167,15 @@ async function downloadPage(pageData, options) {
 			}
 			if (filename) {
 				message.filename = pageData.filename = filename;
+				pageData.filename = options.captureHtmlScreenFileName;
+
+				if(options.saveWithTidbitsHub) {
+					message.dodaoScreenshotBlobUrl = await getDodaoScreenshotBlobUrl(pageData.content);
+				}
+
 				const blobURL = URL.createObjectURL(new Blob([pageData.content], { type: pageData.mimeType }));
 				message.blobURL = blobURL;
+				console.log('message in download.js', message);
 				const result = await browser.runtime.sendMessage(message);
 				URL.revokeObjectURL(blobURL);
 				if (result.error) {
