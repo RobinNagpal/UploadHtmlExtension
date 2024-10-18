@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import {
   DODAO_API_BASE_URL,
-  DODAO_S3_BASE_URL,
 } from "../common/dodao-constants.js";
 export function init() {}
 browser.runtime.onMessage.addListener(async (message) => {
