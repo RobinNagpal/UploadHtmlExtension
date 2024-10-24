@@ -346,10 +346,8 @@ async function createCollection(name, description, spaceId, apiKey) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          input: {
-            name,
-            description,
-          },
+          name,
+          description,
         }),
       }
     );
