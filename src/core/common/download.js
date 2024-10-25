@@ -128,6 +128,10 @@ async function downloadPage(pageData, options) {
 			pageData.filename = ui.prompt("Save as", pageData.filename);
 		}
 		if (pageData.filename) {
+			if (options.saveWithTidbitsHub) {
+				// we capture screenshot using options.content as it contains whole page content for the screesnhot
+				message.dodaoScreenshotBlobUrl = await getDodaoScreenshotBlobUrl(options.content);
+			}
 			const blob = new Blob([await yabson.serialize(pageData)], { type: pageData.mimeType });
 			const blobURL = URL.createObjectURL(blob);
 			message.filename = pageData.filename;

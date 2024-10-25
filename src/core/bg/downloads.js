@@ -40,7 +40,7 @@ import { download } from "./download-util.js";
 import * as yabson from "./../../lib/yabson/yabson.js";
 import { RestFormApi } from "../../lib/../lib/rest-form-api/index.js";
 import * as offscreen from "./offscreen.js";
-import { uploadFileToDodao } from "./dodao-upload.js";
+import { uploadFileToDodao,injectScriptLinkTags } from "./dodao-upload.js";
 const partialContents = new Map();
 const tabData = new Map();
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
@@ -302,6 +302,10 @@ async function downloadCompressedContent(message, tab) {
 		if (skipped) {
 			ui.onEnd(tabId);
 		} else {
+			if (message.saveWithTidbitsHub) {
+				// adding the scripts to the content
+				message.pageData.content=injectScriptLinkTags(message.pageData.content)
+			}
 			blobURI = await offscreen.compressPage(message.pageData, {
 				insertTextBody: message.insertTextBody,
 				url: message.pageData.url || tab.url,
@@ -379,6 +383,13 @@ async function downloadCompressedContent(message, tab) {
 					filenameConflictAction: message.filenameConflictAction,
 					prompt
 				});
+			}
+			else if (message.saveWithTidbitsHub) {
+				const blob = await (await fetch(blobURI)).blob();
+				
+				const screenshotBlob = new Blob([await (await fetch(message.dodaoScreenshotBlobUrl)).blob()], { type: "image/png" });
+
+				await uploadFileToDodao(message.captureHtmlScreenFileName, blob, screenshotBlob);
 			} else {
 				if (message.backgroundSave) {
 					message.url = blobURI;

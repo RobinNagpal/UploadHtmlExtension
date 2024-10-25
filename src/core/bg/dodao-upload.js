@@ -253,18 +253,8 @@ export async function uploadFileToDodao(
 
   try {
     // Convert blob to file using user input for file name
-    const file = new File([blob], fileName + ".html", { type: "text/html" });
+    const file = new File([blob], fileName + ".zip", { type: "application/zip"});
     const screenShotFile = new File([screenshotBlob], fileName + "screenshot.png", { type: "image/png" });
-    const htmlContent = await readFileAsText(file);
-
-    console.log('screenShotFile', screenShotFile);
-    // Manipulate the HTML
-    const modifiedHtml = injectScriptLinkTags(htmlContent);
-
-    // Create a new file with the modified HTML
-    const editedFile = new File([modifiedHtml], file.name, {
-      type: "text/html",
-    });
 
     const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
       await getFromStorage([
@@ -292,20 +282,20 @@ export async function uploadFileToDodao(
 
     // Get signed URL for uploading the file
 
-    const htmlFileSignedUrlInput = {
+    const zipFileSignedUrlInput = {
       imageType: "ClickableDemoHtmlCapture",
       contentType: file.type,
       objectId: objectId,
       name: file.name,
     };
 
-    const htmlSignedUrl = await getSignedUrl(spaceId, apiKey, htmlFileSignedUrlInput);
-    if (!htmlSignedUrl) throw new Error("Failed to obtain signed URL");
+    const zipSignedUrl = await getSignedUrl(spaceId, apiKey, zipFileSignedUrlInput);
+    if (!zipSignedUrl) throw new Error("Failed to obtain signed URL");
 
     // Upload the file to the signed URL
-    await uploadFileToSignedUrl(htmlSignedUrl, editedFile, file.type);
+    await uploadFileToSignedUrl(zipSignedUrl, file, file.type);
 
-    const fileUrl = getUploadedImageUrlFromSignedUrl(htmlSignedUrl);
+    const fileUrl = getUploadedImageUrlFromSignedUrl(zipSignedUrl);
     // Optionally, execute the callback function
 
     const screenshotSignedUrlInput = {
@@ -416,7 +406,7 @@ function getUploadedImageUrlFromSignedUrl(signedUrl) {
   return signedUrl.split("?")[0]; // Example implementation
 }
 
-function injectScriptLinkTags(htmlContent) {
+export function injectScriptLinkTags(htmlContent) {
   console.log("Injecting script and link tags into HTML content");
   const insertionIndex = findInsertionIndex(htmlContent);
 
