@@ -121,7 +121,7 @@ const DEFAULT_CONFIG = {
 	includeBOM: false,
 	warnUnsavedPage: true,
 	displayInfobarInEditor: false,
-	compressContent: false,
+	compressContent: true,
 	createRootDirectory: false,
 	selfExtractingArchive: true,
 	extractDataFromPage: true,
