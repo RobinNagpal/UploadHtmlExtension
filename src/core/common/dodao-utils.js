@@ -1,6 +1,7 @@
-// export const DODAO_API_BASE_URL = "https://tidbitshub.org";
-export const DODAO_API_BASE_URL = "http://localhost:3000";
-export const CLIKABLE_FILES_HOST_URL = "https://dodao-dev-public-assets.s3.amazonaws.com";
+export const DODAO_API_BASE_URL = "https://tidbitshub.org";
+// export const DODAO_API_BASE_URL = "http://localhost:3000";
+export const CLIKABLE_FILES_HOST_URL = "https://dodao-prod-public-assets.s3.amazonaws.com";
+// export const CLIKABLE_FILES_HOST_URL = "https://dodao-dev-public-assets.s3.amazonaws.com";
 
 export function injectScriptLinkTags(htmlContent) {
   console.log("Injecting script and link tags into HTML content");
@@ -37,13 +38,13 @@ function findInsertionIndex(htmlContent) {
 
 function getScriptLinkTags() {
   return [
-    `<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/animations/shift-toward.css" />`,
-    `<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/material.css" />`,
-    `<script src="https://unpkg.com/@popperjs/core@2"></script>`,
-    `<script src="https://unpkg.com/tippy.js@6"></script>`,
+    `<link rel="stylesheet" href="${CLIKABLE_FILES_HOST_URL}/clickable-demos-prod-files/dependencies/tippy.js@6/animations/shift-toward.css" />`,
+    `<link rel="stylesheet" href="${CLIKABLE_FILES_HOST_URL}/clickable-demos-prod-files/dependencies/tippy.js@6/themes/material.css" />`,
+    `<script src="${CLIKABLE_FILES_HOST_URL}/clickable-demos-prod-files/dependencies/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>`,
+    `<script src="${CLIKABLE_FILES_HOST_URL}/clickable-demos-prod-files/dependencies/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>`,
+    `<script src="${CLIKABLE_FILES_HOST_URL}/clickable-demos-prod-files/dependencies/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>`,
     `<link rel="stylesheet" href="${CLIKABLE_FILES_HOST_URL}/clickable-demos-prod-files/clickableDemoTooltipStyles.css" />`,
     `<script src="${CLIKABLE_FILES_HOST_URL}/clickable-demos-prod-files/clickableDemoTooltipScript.js"></script>`,
-    `<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>`,
     getCustomScriptTag(),
   ];
 }
