@@ -171,15 +171,8 @@ async function downloadPage(pageData, options) {
 			}
 			if (filename) {
 				message.filename = pageData.filename = filename;
-				pageData.filename = options.captureHtmlScreenFileName;
-
-				if(options.saveWithTidbitsHub) {
-					message.dodaoScreenshotBlobUrl = await getDodaoScreenshotBlobUrl(pageData.content);
-				}
-
 				const blobURL = URL.createObjectURL(new Blob([pageData.content], { type: pageData.mimeType }));
 				message.blobURL = blobURL;
-				console.log('message in download.js', message);
 				const result = await browser.runtime.sendMessage(message);
 				URL.revokeObjectURL(blobURL);
 				if (result.error) {
