@@ -243,13 +243,6 @@ async function downloadContent(message, tab) {
 					filenameConflictAction: message.filenameConflictAction,
 					prompt
 				});
-			} else if(message.saveWithTidbitsHub){
-				const blob = new Blob([message.content], { type: message.mimeType });
-
-				const screenshotBlob = new Blob([await (await fetch(message.dodaoScreenshotBlobUrl)).blob()], { type: "image/png" });
-
-				await uploadFileToDodao(message.captureHtmlScreenFileName, blob, screenshotBlob);
-
 			} else {
 				response = await downloadPage(message, {
 					confirmFilename: message.confirmFilename,
@@ -305,7 +298,7 @@ async function downloadCompressedContent(message, tab) {
 		} else {
 			if (message.saveWithTidbitsHub) {
 				// adding the scripts to the content
-				// message.pageData.content = injectScriptLinkTags(message.pageData.content)
+				message.pageData.content=injectScriptLinkTags(message.pageData.content)
 			}
 			blobURI = await offscreen.compressPage(message.pageData, {
 				insertTextBody: message.insertTextBody,
@@ -385,7 +378,7 @@ async function downloadCompressedContent(message, tab) {
 					filenameConflictAction: message.filenameConflictAction,
 					prompt
 				});
-			} else if (false) {
+			} else if (message.saveWithTidbitsHub) {
 				const blob = await (await fetch(blobURI)).blob();
 
 				const screenshotBlob = new Blob([await (await fetch(message.dodaoScreenshotBlobUrl)).blob()], { type: "image/png" });

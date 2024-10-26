@@ -1,9 +1,9 @@
 /* global require */
 
-import resolve from "@rollup/plugin-node-resolve";
+import resolve, {nodeResolve} from "@rollup/plugin-node-resolve";
 import terser from "@rollup/plugin-terser";
 
-const PLUGINS = [resolve({ moduleDirectories: ["node_modules"] })];
+const PLUGINS = [resolve({ moduleDirectories: ["node_modules"] }), nodeResolve()];
 const EXTERNAL = ["single-file-core"];
 
 export default [{

@@ -148,8 +148,9 @@ async function savePage(message, sender) {
   if (message.data.captureHtmlScreenFileName) {
     business.saveTabs([sender.tab], {
       compressContent: true,
-      selfExtractingArchive: true,
+      selfExtractingArchive: false,
       saveWithTidbitsHub: true,
+      createRootDirectory: false,
       captureHtmlScreenFileName: message.data.captureHtmlScreenFileName,
     });
   } else {

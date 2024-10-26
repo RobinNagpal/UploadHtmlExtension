@@ -123,7 +123,7 @@ const DEFAULT_CONFIG = {
 	displayInfobarInEditor: false,
 	compressContent: true,
 	createRootDirectory: false,
-	selfExtractingArchive: true,
+	selfExtractingArchive: false,
 	extractDataFromPage: true,
 	preventAppendedData: false,
 	insertEmbeddedImage: false,
