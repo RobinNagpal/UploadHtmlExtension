@@ -1,4 +1,4 @@
-import {DODAO_API_BASE_URL} from "../common/dodao-constants.js";
+import {DODAO_API_BASE_URL, slugify} from "../common/dodao-utils.js";
 
 let business;
 export function init(businessApi) {
@@ -147,7 +147,10 @@ async function savePage(message, sender) {
     ]);
   if (message.data.captureHtmlScreenFileName) {
     business.saveTabs([sender.tab], {
+      compressContent: true,
+      selfExtractingArchive: false,
       saveWithTidbitsHub: true,
+      createRootDirectory: false,
       captureHtmlScreenFileName: message.data.captureHtmlScreenFileName,
     });
   } else {
@@ -253,18 +256,9 @@ export async function uploadFileToDodao(
 
   try {
     // Convert blob to file using user input for file name
-    const file = new File([blob], fileName + ".html", { type: "text/html" });
+    const slugifiedFileName = slugify(fileName);
+    const zipFile = new File([blob], slugifiedFileName + ".zip", { type: "application/zip"});
     const screenShotFile = new File([screenshotBlob], fileName + "screenshot.png", { type: "image/png" });
-    const htmlContent = await readFileAsText(file);
-
-    console.log('screenShotFile', screenShotFile);
-    // Manipulate the HTML
-    const modifiedHtml = injectScriptLinkTags(htmlContent);
-
-    // Create a new file with the modified HTML
-    const editedFile = new File([modifiedHtml], file.name, {
-      type: "text/html",
-    });
 
     const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
       await getFromStorage([
@@ -280,10 +274,13 @@ export async function uploadFileToDodao(
 
     console.log(
       "Uploading file to DoDAO",
-      spaceId,
-      apiKey,
-      selectedTidbitCollection,
-      selectedClickableDemo
+      {
+        demo,
+        spaceId,
+        apiKey,
+        selectedTidbitCollection,
+        selectedClickableDemo
+      }
     );
     if (!spaceId || !apiKey) {
       console.log("No data found in chrome.storage");
@@ -292,20 +289,22 @@ export async function uploadFileToDodao(
 
     // Get signed URL for uploading the file
 
-    const htmlFileSignedUrlInput = {
-      imageType: "ClickableDemoHtmlCapture",
-      contentType: file.type,
-      objectId: objectId,
-      name: file.name,
+    const zipFileSignedUrlInput = {
+      contentType: zipFile.type,
+      name: zipFile.name,
     };
 
-    const htmlSignedUrl = await getSignedUrl(spaceId, apiKey, htmlFileSignedUrlInput);
-    if (!htmlSignedUrl) throw new Error("Failed to obtain signed URL");
+
+    const zipSignedUrl = await getZippedFileSignedUrl(spaceId, selectedClickableDemo.demoId, apiKey, zipFileSignedUrlInput);
+
+    console.log("zipSignedUrl - ", zipSignedUrl || 'No signed URL found') ;
+
+    if (!zipSignedUrl) throw new Error("Failed to obtain signed URL");
 
     // Upload the file to the signed URL
-    await uploadFileToSignedUrl(htmlSignedUrl, editedFile, file.type);
+    await uploadFileToSignedUrl(zipSignedUrl, zipFile, zipFile.type);
 
-    const fileUrl = getUploadedImageUrlFromSignedUrl(htmlSignedUrl);
+    const fileUrl = getUploadedImageUrlFromSignedUrl(zipSignedUrl);
     // Optionally, execute the callback function
 
     const screenshotSignedUrlInput = {
@@ -328,7 +327,7 @@ export async function uploadFileToDodao(
     const captureInput = {
       clickableDemoId: demo.demoId,
       fileName: fileName,
-      fileUrl: fileUrl,
+      fileUrl: fileUrl.replace('zipped-html-captures', 'unzipped-html-captures').replace('.zip', '/index.html'),
       fileImageUrl: fileImageUrl,
     };
     const dodaoCapture = await saveDodaoCapture(
@@ -341,16 +340,6 @@ export async function uploadFileToDodao(
       await screenCaptured();
     }
   } catch (error) {}
-}
-
-// Helper function to read a file as text
-function readFileAsText(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsText(file);
-  });
 }
 
 function sendMethodMessage(method, data) {
@@ -368,6 +357,7 @@ function sendMethodMessage(method, data) {
     });
   });
 }
+
 // Helper function to send an error message to the active tab
 function sendErrorMessage(message) {
   return new Promise((resolve) => {
@@ -399,6 +389,26 @@ async function getSignedUrl(spaceId, apiKey, input) {
   const data = await response.json();
   return data.url;
 }
+
+async function getZippedFileSignedUrl(spaceId, demoId, apiKey, input) {
+  const url = `${DODAO_API_BASE_URL}/api/${spaceId}/actions/clickable-demos/${demoId}/html-capture-signed-url`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "X-API-KEY": apiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    console.error( `Failed to get signed URL - ${url} - `, response.status, response.statusText);
+    return null;
+  }
+
+  const data = await response.json();
+  return data.url;
+}
 // Helper function to upload a file to a signed URL
 function uploadFileToSignedUrl(url, file, contentType) {
   return fetch(url, {
@@ -416,82 +426,7 @@ function getUploadedImageUrlFromSignedUrl(signedUrl) {
   return signedUrl.split("?")[0]; // Example implementation
 }
 
-function injectScriptLinkTags(htmlContent) {
-  console.log("Injecting script and link tags into HTML content");
-  const insertionIndex = findInsertionIndex(htmlContent);
 
-  if (insertionIndex !== undefined) {
-    const tags = getScriptLinkTags();
-    const modifiedHtml = insertTagsIntoHtml(htmlContent, insertionIndex, tags);
-    return modifiedHtml;
-  } else {
-    console.warn("Unable to find opening style tag in HTML content");
-    return htmlContent; // Return unmodified content if the style tag is not found
-  }
-}
-
-function findInsertionIndex(htmlContent) {
-  const styleTagRegex = /<style>/i;
-  const match = styleTagRegex.exec(htmlContent);
-  return match ? match.index : undefined;
-}
-
-function getScriptLinkTags() {
-  return [
-    `<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/animations/shift-toward.css" />`,
-    `<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/material.css" />`,
-    `<script src="https://unpkg.com/@popperjs/core@2"></script>`,
-    `<script src="https://unpkg.com/tippy.js@6"></script>`,
-    `<link rel="stylesheet" href="https://dodao-prod-public-assets.s3.amazonaws.com/clickable-demos-prod-files/clickableDemoTooltipStyles.css" />`,
-    `<script src="https://dodao-prod-public-assets.s3.amazonaws.com/clickable-demos-prod-files/clickableDemoTooltipScript.js"></script>`,
-    `<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>`,
-    getCustomScriptTag(),
-  ];
-}
-
-function getCustomScriptTag() {
-  return `<script>
-    console.log("Injecting event listener for clickable demo tooltip");
-    window.addEventListener("message", (event) => {
-      console.log("Received message from parent", event.data);
-      if (typeof window.handleDoDAOParentWindowEvent === "function") {
-        window.handleDoDAOParentWindowEvent(event);
-      } else {
-        console.error("handleDoDAOParentWindowEvent is not defined");
-      }
-    });
-    
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/clickable-demos-prod-files/clickableDemoServiceWorker.js")
-      .then(registration => {
-        console.log("Service Worker registered with scope:", registration.scope);
-
-        // After registration, send URLs to cache to the Service Worker
-        window.addEventListener("load", () => {
-          const urlsToCache = Array.from(document.querySelectorAll("link[rel='stylesheet'], script[src]"))
-            .map(tag => tag.href || tag.src);
-
-          const filteredUrls = urlsToCache.filter(url => !url.includes("dodao-prod-public-assets"));
-          
-          console.log("Sending URLs to cache to Service Worker:", filteredUrls);
-          if (navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({ type: "CACHE_URLS", payload: filteredUrls });
-          }
-        });
-      }).catch(error => {
-        console.log("Service Worker registration failed:", error);
-      });
-    }
-  </script>`;
-}
-
-function insertTagsIntoHtml(htmlContent, insertionIndex, tags) {
-  return [
-    htmlContent.slice(0, insertionIndex),
-    ...tags,
-    htmlContent.slice(insertionIndex),
-  ].join("");
-}
 
 
 async function saveDodaoCapture(input, spaceId, apiKey) {

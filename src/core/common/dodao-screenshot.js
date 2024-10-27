@@ -1,9 +1,8 @@
 import html2canvas from "html2canvas";
 
-export async function getDodaoScreenshotBlobUrl(content){
+export async function getDodaoScreenshotBlobUrl(content) {
   const iframe = createIframeWithContent(content);
   document.body.appendChild(iframe);
-
 
   const dodaoScreenshotBlobUrl = await new Promise((resolve, reject) => {
     iframe.onload = async () => {
@@ -17,11 +16,12 @@ export async function getDodaoScreenshotBlobUrl(content){
         allowTaint: true,
       });
 
-      const canvasBlob = await canvasToBlob(
-        canvas
-      );
+      const canvasBlob = await canvasToBlob(canvas);
 
       const dodaoScreenshotBlobUrl = URL.createObjectURL(canvasBlob);
+      // remove the iframe after screesnhot is taken
+      document.body.removeChild(iframe);
+      
       resolve(dodaoScreenshotBlobUrl);
     };
   });
@@ -29,13 +29,15 @@ export async function getDodaoScreenshotBlobUrl(content){
   return dodaoScreenshotBlobUrl;
 }
 
-
 function createIframeWithContent(htmlContent) {
   const iframe = document.createElement("iframe");
   iframe.style.width = "1920px";
   iframe.style.height = "1080px";
   iframe.style.border = "none";
   iframe.srcdoc = htmlContent;
+  iframe.style.position = "absolute";// added these postions so the symmetry of the page doesn't get disturbed by iframe
+  iframe.style.left = "-9999px";
+  iframe.style.top = "-9999px";
   return iframe;
 }
 

@@ -41,6 +41,7 @@ import * as yabson from "./../../lib/yabson/yabson.js";
 import { RestFormApi } from "../../lib/../lib/rest-form-api/index.js";
 import * as offscreen from "./offscreen.js";
 import { uploadFileToDodao } from "./dodao-upload.js";
+import { injectScriptLinkTags } from "../common/dodao-utils.js";
 const partialContents = new Map();
 const tabData = new Map();
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
@@ -242,13 +243,6 @@ async function downloadContent(message, tab) {
 					filenameConflictAction: message.filenameConflictAction,
 					prompt
 				});
-			} else if(message.saveWithTidbitsHub){
-				const blob = new Blob([message.content], { type: message.mimeType });
-
-				const screenshotBlob = new Blob([await (await fetch(message.dodaoScreenshotBlobUrl)).blob()], { type: "image/png" });
-
-				await uploadFileToDodao(message.captureHtmlScreenFileName, blob, screenshotBlob);
-
 			} else {
 				response = await downloadPage(message, {
 					confirmFilename: message.confirmFilename,
@@ -302,6 +296,10 @@ async function downloadCompressedContent(message, tab) {
 		if (skipped) {
 			ui.onEnd(tabId);
 		} else {
+			if (message.saveWithTidbitsHub) {
+				// adding the scripts to the content
+				message.pageData.content=injectScriptLinkTags(message.pageData.content)
+			}
 			blobURI = await offscreen.compressPage(message.pageData, {
 				insertTextBody: message.insertTextBody,
 				url: message.pageData.url || tab.url,
@@ -316,6 +314,7 @@ async function downloadCompressedContent(message, tab) {
 				password: message.password,
 				embeddedImage: message.embeddedImage
 			});
+			console.log("compressed blobURI - ", blobURI);
 			if (message.openEditor) {
 				ui.onEdit(tabId);
 				const content = Array.from(new Uint8Array(await (await fetch(blobURI)).arrayBuffer()));
@@ -379,6 +378,12 @@ async function downloadCompressedContent(message, tab) {
 					filenameConflictAction: message.filenameConflictAction,
 					prompt
 				});
+			} else if (message.saveWithTidbitsHub) {
+				const blob = await (await fetch(blobURI)).blob();
+
+				const screenshotBlob = new Blob([await (await fetch(message.dodaoScreenshotBlobUrl)).blob()], { type: "image/png" });
+
+				await uploadFileToDodao(message.captureHtmlScreenFileName, blob, screenshotBlob);
 			} else {
 				if (message.backgroundSave) {
 					message.url = blobURI;

@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import {
-  DODAO_API_BASE_URL,
-} from "../common/dodao-constants.js";
+  DODAO_API_BASE_URL, slugify,
+} from "../common/dodao-utils.js";
 export function init() {}
 browser.runtime.onMessage.addListener(async (message) => {
   if (message.method === "dodaoContent.captureApiKey") {
@@ -1210,17 +1210,6 @@ function createMessageElement(text, styles = {}) {
   return messageElement;
 }
 
-function slugify(string) {
-  return string
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w-]+/g, "")
-    .replace(/--+/g, "-")
-    .replace(/^-+/, "")
-    .replace(/-+$/, "");
-}
 
 function createNewEntityId(entityName, spaceId) {
   const firstSegment = spaceId.split("-")[0];
