@@ -16,9 +16,9 @@ browser.runtime.onMessage.addListener(async (message) => {
     if (message.data.screenCaptured) {
       hideLoader();
       showSuccessNotification("Screen captured successfully");
-    } else if (message.data.errorCaptured) {
+    } else if (message.data.error) {
       hideLoader();
-      showErrorNotification(message.data.errorCaptured);
+      showErrorNotification(message.data.error);
     }
     setupBottomBarWithDemo(
       message.data.spaceId,
