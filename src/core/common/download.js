@@ -28,6 +28,7 @@ import * as ui from "./../../ui/content/content-ui.js";
 import { getSharePageBar, setLabels } from "./../../ui/common/common-content-ui.js";
 import html2canvas from "html2canvas";
 import {getDodaoScreenshotBlobUrl} from "./dodao-screenshot.js";
+import { removeLoader } from "./dodao-utils.js";
 
 const MAX_CONTENT_SIZE = 16 * (1024 * 1024);
 
@@ -131,6 +132,8 @@ async function downloadPage(pageData, options) {
 			if (options.saveWithTidbitsHub) {
 				// we capture screenshot using options.content as it contains whole page content for the screesnhot
 				message.dodaoScreenshotBlobUrl = await getDodaoScreenshotBlobUrl(options.content);
+				// remove loader from the content
+				pageData.content=removeLoader(pageData.content)
 			}
 			const blob = new Blob([await yabson.serialize(pageData)], { type: pageData.mimeType });
 			const blobURL = URL.createObjectURL(blob);
