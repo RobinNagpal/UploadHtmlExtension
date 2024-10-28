@@ -145,7 +145,8 @@ async function savePage(message, sender) {
       "selectedClickableDemo",
       "selectedTidbitCollection",
     ]);
-  if (message.data.captureHtmlScreenFileName) {
+    if (message.data.captureHtmlScreenFileName) {
+    sendMethodMessage("dodaoContent.showLoader");
     business.saveTabs([sender.tab], {
       compressContent: true,
       selfExtractingArchive: false,
@@ -199,6 +200,23 @@ async function screenCaptured() {
   });
 }
 
+async function uploadingErrorCaptured(message) {
+  const { spaceId, apiKey, selectedClickableDemo, selectedTidbitCollection } =
+    await getFromStorage([
+      "spaceId",
+      "apiKey",
+      "selectedClickableDemo",
+      "selectedTidbitCollection",
+    ]);
+
+  sendMethodMessage("dodaoContent.renderBottomBar", {
+    spaceId,
+    apiKey,
+    selectedClickableDemo,
+    selectedTidbitCollection,
+    error: message || "Failed to upload file. Please Try again"
+  });
+}
 async function saveSelectedCollectionAndDemoId(message) {
   const { spaceId, apiKey } = await getFromStorage(["spaceId", "apiKey"]);
   if (
@@ -246,7 +264,6 @@ export async function uploadFileToDodao(
   blob,
   screenshotBlob
 ) {
-  sendMethodMessage("dodaoContent.showLoader");
 
   const fileName = captureHtmlScreenFileName;
   if (!fileName) {
@@ -299,7 +316,7 @@ export async function uploadFileToDodao(
 
     console.log("zipSignedUrl - ", zipSignedUrl || 'No signed URL found') ;
 
-    if (!zipSignedUrl) throw new Error("Failed to obtain signed URL");
+    if (!zipSignedUrl) uploadingErrorCaptured();
 
     // Upload the file to the signed URL
     await uploadFileToSignedUrl(zipSignedUrl, zipFile, zipFile.type);
@@ -383,6 +400,7 @@ async function getSignedUrl(spaceId, apiKey, input) {
   });
 
   if (!response.ok) {
+    uploadingErrorCaptured()
     return null;
   }
 
@@ -403,6 +421,7 @@ async function getZippedFileSignedUrl(spaceId, demoId, apiKey, input) {
 
   if (!response.ok) {
     console.error( `Failed to get signed URL - ${url} - `, response.status, response.statusText);
+    uploadingErrorCaptured()
     return null;
   }
 
@@ -444,6 +463,7 @@ async function saveDodaoCapture(input, spaceId, apiKey) {
   );
 
   if (!response.ok) {
+    uploadingErrorCaptured("Failed to save the capture. Please Try Again")
     throw new Error("Failed to save the capture");
   }
   const data = await response.json();

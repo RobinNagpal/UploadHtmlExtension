@@ -29,6 +29,20 @@ export function slugify(string) {
     .replace(/-+$/, "");
 }
 
+export function removeLoader(content) {
+  // Remove the loader from the content
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, 'text/html');
+  const loaderBackground = doc.querySelector(".loader-background");
+  
+  if (loaderBackground) {
+    loaderBackground.remove();
+  }
+
+  const modifiedContent = doc.documentElement.innerHTML;
+  
+  return modifiedContent
+}
 
 function findInsertionIndex(htmlContent) {
   const styleTagRegex = /<style>/i;

@@ -1,9 +1,19 @@
 import html2canvas from "html2canvas";
 
 export async function getDodaoScreenshotBlobUrl(content) {
-  const iframe = createIframeWithContent(content);
-  document.body.appendChild(iframe);
+  // Remove the loader from the content before creating the iframe for screenshot
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, 'text/html');
+  const loaderBackground = doc.querySelector(".loader-background");
+  
+  if (loaderBackground) {
+    loaderBackground.remove();
+  }
 
+  const modifiedContent = doc.documentElement.innerHTML;
+
+  const iframe = createIframeWithContent(modifiedContent);
+  document.body.appendChild(iframe);
   const dodaoScreenshotBlobUrl = await new Promise((resolve, reject) => {
     iframe.onload = async () => {
       const iframeDocument = iframe.contentDocument;
