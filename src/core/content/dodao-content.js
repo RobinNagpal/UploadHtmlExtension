@@ -3,13 +3,29 @@ import {
   DODAO_API_BASE_URL, slugify,
 } from "../common/dodao-utils.js";
 export function init() {}
+
+const SPACE_ID_INPUT_ID = "space-id-input";
+const API_KEY_INPUT_ID = "api-key-input";
+const COLLECTION_NAME_INPUT_ID = "collection-name-input";
+const COLLECTION_DESCRIPTION_INPUT_ID = "collection-description-input";
+const DEMO_NAME_INPUT_ID = "demo-name-input";
+const DEMO_DESCRIPTION_INPUT_ID = "demo-description-input";
+const FILE_NAME_INPUT_ID = "file-name-input";
+
+document.addEventListener('focusin', event => {
+  event.stopPropagation();
+  event.preventDefault();
+}, true);
+
+
 browser.runtime.onMessage.addListener(async (message) => {
+
   if (message.method === "dodaoContent.captureApiKey") {
     showSaveApiKeyAndSpaceIdScreen(message);
     return {};
   }
   if (message.method === "dodaoContent.selectClickableDemo") {
-    showsaveClickableDemoScreen(message);
+    showSaveClickableDemoScreen(message);
     return {};
   }
   if (message.method === "dodaoContent.renderBottomBar") {
@@ -56,7 +72,7 @@ function showSaveApiKeyAndSpaceIdScreen(message) {
   }
 }
 
-async function showsaveClickableDemoScreen(message) {
+async function showSaveClickableDemoScreen(message) {
   if (message.data.error) {
     showErrorNotification(message.data.error);
     setTimeout(async () => {
@@ -82,6 +98,7 @@ function showLoginScreen(message) {
     {
       className: "space-id-input",
       placeholder: "Enter your Space ID",
+      id: SPACE_ID_INPUT_ID,
       styles: {
         width: "90%",
         padding: "10px",
@@ -90,6 +107,7 @@ function showLoginScreen(message) {
     },
     {
       className: "api-key-input",
+      id: API_KEY_INPUT_ID,
       placeholder: "Enter your API key from the space settings page:",
       styles: {
         width: "90%",
@@ -273,6 +291,9 @@ function getDemosFromCollection(collection) {
     .map((item) => item.demo);
 }
 
+
+
+
 function showCreateCollectionScreen(
   spaceId,
   apiKey,
@@ -283,6 +304,7 @@ function showCreateCollectionScreen(
     {
       className: "collection-name-input",
       placeholder: "Enter collection name",
+      id: COLLECTION_NAME_INPUT_ID,
       styles: {
         width: "90%",
         padding: "10px",
@@ -292,6 +314,7 @@ function showCreateCollectionScreen(
     {
       className: "collection-description-input",
       placeholder: "Enter collection description",
+      id: COLLECTION_DESCRIPTION_INPUT_ID,
       styles: {
         width: "90%",
         padding: "10px",
@@ -597,6 +620,7 @@ function showCreateDemoScreen(
     {
       className: "demo-name-input",
       placeholder: "Enter demo name",
+      id: DEMO_NAME_INPUT_ID,
       styles: {
         width: "90%",
         padding: "10px",
@@ -606,6 +630,7 @@ function showCreateDemoScreen(
     {
       className: "demo-description-input",
       placeholder: "Enter demo description",
+      id: DEMO_DESCRIPTION_INPUT_ID,
       styles: {
         width: "90%",
         padding: "10px",
@@ -780,6 +805,7 @@ async function captureScreenHtml(spaceId, apiKey, demo, collection) {
     {
       className: "file-name-input",
       placeholder: "Enter file name",
+      id: FILE_NAME_INPUT_ID,
       styles: {
         width: "90%",
         marginBottom: "10px",
@@ -870,6 +896,7 @@ function createModalForm({
       inputConfig.className || "",
       inputConfig.styles || {}
     );
+    inputElement.id = inputConfig.id;
     formContainer.appendChild(inputElement);
     // Store the input element reference inside the inputConfig object
     inputConfig.element = inputElement;
@@ -940,6 +967,12 @@ function createNewModalElement(
   }
   const fullScreenModalWrapper = document.createElement("div");
   fullScreenModalWrapper.id = "dodao-full-screen-modal-wrapper";
+
+  fullScreenModalWrapper.style.cssText = `position: fixed; top: 0; left: 0; right: 0; bottom: 0; font-size: 24px; z-index: 2147483640;`;
+
+  // Append styles to head to affect the entire document
+  document.head.appendChild(createModalStyle());
+
   document.body.appendChild(fullScreenModalWrapper);
   const shadowRoot = fullScreenModalWrapper.attachShadow({ mode: "open" });
   shadowRoot.appendChild(createModalStyle());
@@ -988,6 +1021,8 @@ function createModalStyle() {
       position: fixed;
       top: 0;
       left: 0;
+      bottom: 0;
+      right: 0;
       font-size: 24px;
       flex-direction: column;
       width: 100%;
