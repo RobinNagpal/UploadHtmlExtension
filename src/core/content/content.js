@@ -201,6 +201,7 @@ async function processPage(options) {
 	let framesSessionId;
 	options.keepFilename = options.saveToGDrive || options.saveToGitHub || options.saveWithWebDAV || options.saveToDropbox || options.saveToRestFormApi || options.saveToS3 || options.saveWithTidbitsHub;
 	singlefile.helper.initDoc(document);
+	captureScreenshot(options);
 	ui.onStartPage(options);
 	processor = new singlefile.SingleFile(options);
 	const preInitializationPromises = [];
@@ -362,4 +363,21 @@ async function processPage(options) {
 		}
 	}
 	return page;
+}
+
+export async function captureScreenshot(options) {
+	ui.setVisible(false);
+	const screenshotBlobURI = await browser.runtime.sendMessage({
+		method: "tabs.getScreenshot",
+		width: document.documentElement.scrollWidth,
+		height: document.documentElement.scrollHeight,
+		innerHeight: globalThis.innerHeight,
+	});
+	ui.setVisible(true);
+	ui.onInsertingEmbeddedImage(options);
+	options.embeddedImage = new Uint8Array(
+		await (await fetch(screenshotBlobURI)).arrayBuffer()
+	);
+	URL.revokeObjectURL(screenshotBlobURI);
+	ui.onInsertEmbeddedImage(options);
 }
