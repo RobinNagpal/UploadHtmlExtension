@@ -968,11 +968,6 @@ function createNewModalElement(
   const fullScreenModalWrapper = document.createElement("div");
   fullScreenModalWrapper.id = "dodao-full-screen-modal-wrapper";
 
-  fullScreenModalWrapper.style.cssText = `position: fixed; top: 0; left: 0; right: 0; bottom: 0; font-size: 24px; z-index: 2147483640;`;
-
-  // Append styles to head to affect the entire document
-  document.head.appendChild(createModalStyle());
-
   document.body.appendChild(fullScreenModalWrapper);
   const shadowRoot = fullScreenModalWrapper.attachShadow({ mode: "open" });
   shadowRoot.appendChild(createModalStyle());
