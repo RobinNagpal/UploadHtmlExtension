@@ -698,7 +698,7 @@ async function createDemo(
 
   try {
     const response = await fetch(
-      `${DODAO_API_BASE_URL}/api/${spaceId}/clickable-demos/${demoId}`,
+      `${DODAO_API_BASE_URL}/api/${spaceId}/clickable-demos?clickableDemoId=${demoId}`,
       {
         method: "POST",
         headers: {
@@ -761,7 +761,7 @@ function addLogoutButton() {
 
 async function captureScreenHtml(spaceId, apiKey, demo, collection) {
   const demoId = demo.demoId;
-  const apiUrl = `${DODAO_API_BASE_URL}/api/${spaceId}/html-captures/${demoId}`;
+  const apiUrl = `${DODAO_API_BASE_URL}/api/${spaceId}/html-captures?clickableDemoId=${demoId}`;
   let existingFiles = [];
   try {
     const response = await fetch(apiUrl, {
