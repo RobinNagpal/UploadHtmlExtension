@@ -26,6 +26,7 @@
 import * as yabson from "./../../lib/yabson/yabson.js";
 import * as ui from "./../../ui/content/content-ui.js";
 import { getSharePageBar, setLabels } from "./../../ui/common/common-content-ui.js";
+import { getDodaoScreenshotBlobUrl } from "./dodao-screenshot.js";
 
 const MAX_CONTENT_SIZE = 16 * (1024 * 1024);
 
@@ -127,8 +128,7 @@ async function downloadPage(pageData, options) {
 		}
 		if (pageData.filename) {
 			if (options.saveWithTidbitsHub) {
-				const blob = new Blob([options.embeddedImage], { type: "image/png" });
-				message.dodaoScreenshotBlobUrl = URL.createObjectURL(blob);
+				message.dodaoScreenshotBlobUrl = await getDodaoScreenshotBlobUrl(options.content);
 			}
 			const blob = new Blob([await yabson.serialize(pageData)], { type: pageData.mimeType });
 			const blobURL = URL.createObjectURL(blob);
@@ -170,11 +170,6 @@ async function downloadPage(pageData, options) {
 			if (filename) {
 				message.filename = pageData.filename = filename;
 				pageData.filename = options.captureHtmlScreenFileName;
-
-				if(options.saveWithTidbitsHub) {
-					const blob = new Blob([options.embeddedImage], { type: "image/png" });
-          			message.dodaoScreenshotBlobUrl = URL.createObjectURL(blob);
-				}
 
 				const blobURL = URL.createObjectURL(new Blob([pageData.content], { type: pageData.mimeType }));
 				message.blobURL = blobURL;

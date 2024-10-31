@@ -1,32 +1,19 @@
-import html2canvas from "html2canvas";
+import * as ui from "./../../ui/content/content-ui.js";
 
-export async function getDodaoScreenshotBlobUrl(content) {
-  const iframe = createIframeWithContent(content);
-  document.body.appendChild(iframe);
-
-  const dodaoScreenshotBlobUrl = await new Promise((resolve, reject) => {
-    iframe.onload = async () => {
-      const iframeDocument = iframe.contentDocument;
-      const canvas = await html2canvas(iframeDocument.body, {
-        width: 1920,
-        height: 1080,
-        windowWidth: 1920,
-        windowHeight: 1080,
-        useCORS: true,
-        allowTaint: true,
-      });
-
-      const canvasBlob = await canvasToBlob(canvas);
-
-      const dodaoScreenshotBlobUrl = URL.createObjectURL(canvasBlob);
-      // remove the iframe after screesnhot is taken
-      document.body.removeChild(iframe);
-      
-      resolve(dodaoScreenshotBlobUrl);
-    };
+export async function getDodaoScreenshotBlobUrl(options) {
+  ui.setVisible(false);
+  const screenshotBlobURI = await browser.runtime.sendMessage({
+    method: "tabs.getScreenshot",
+    width: document.documentElement.scrollWidth,
+    height: document.documentElement.scrollHeight,
+    innerHeight: globalThis.innerHeight,
   });
-
-  return dodaoScreenshotBlobUrl;
+  ui.setVisible(true);
+  const embeddedImage = new Uint8Array(
+    await (await fetch(screenshotBlobURI)).arrayBuffer()
+  );
+  const blob = new Blob([embeddedImage], { type: "image/png" });
+  return URL.createObjectURL(blob);
 }
 
 function createIframeWithContent(htmlContent) {
