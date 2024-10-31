@@ -1,7 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import {
-  DODAO_API_BASE_URL, slugify,
-} from "../common/dodao-utils.js";
+import { DODAO_API_BASE_URL, slugify } from "../common/dodao-utils.js";
 export function init() {}
 
 const SPACE_ID_INPUT_ID = "space-id-input";
@@ -17,9 +15,7 @@ function focusInHandler(event) {
   event.preventDefault();
 }
 
-
 browser.runtime.onMessage.addListener(async (message) => {
-
   if (message.method === "dodaoContent.captureApiKey") {
     showSaveApiKeyAndSpaceIdScreen(message);
     return {};
@@ -235,7 +231,11 @@ function showCollectionList(
     collections.length > 0
       ? "Select a Collection from the List Below:"
       : "No collections found. Create a new collection.",
-    { marginBottom: "10px", color: "#FFF" }
+    { 
+      marginBottom: "10px", 
+      color: "#FFF", 
+      fontSize: "20px" 
+    }
   );
 
   const collectionList = document.createElement("div");
@@ -260,6 +260,7 @@ function showCollectionList(
       marginTop: "20px",
       marginBottom: "10px",
       color: "#FFF",
+      fontSize: "20px",
     }
   );
   const createCollectionButton = createButton(
@@ -290,9 +291,6 @@ function getDemosFromCollection(collection) {
     )
     .map((item) => item.demo);
 }
-
-
-
 
 function showCreateCollectionScreen(
   spaceId,
@@ -451,7 +449,7 @@ function showDemoList(
     demos.length > 0
       ? "Select a Demo from the List Below:"
       : "No demos found. Create a new demo.",
-    { marginBottom: "10px", color: "#FFF" }
+    { marginBottom: "10px", color: "#FFF", fontSize: "20px" }
   );
 
   const demoList = document.createElement("div");
@@ -471,6 +469,7 @@ function showDemoList(
     marginTop: "20px",
     marginBottom: "10px",
     color: "#FFF",
+    fontSize: "20px",
   });
 
   const createDemoButton = createButton(
@@ -564,9 +563,9 @@ function setupBottomBarWithDemo(
     removeModalElement();
     showLoginScreen();
   });
-  logoutButton.style.marginLeft = "10px";
-  logoutButton.style.marginRight = "10px";
-  logoutButton.style.width = "10%";
+  logoutButton.style.marginLeft = "5px";
+  logoutButton.style.marginRight = "5px";
+  logoutButton.style.width = "8%";
 
   const demoTitle = document.createElement("span");
   demoTitle.id = selectedClickableDemo.id;
@@ -875,7 +874,7 @@ function createModalForm({
   cancelButtonClass = "cancel-button",
   cancelButtonHandler,
 }) {
-  document.addEventListener('focusin', focusInHandler, true);
+  document.addEventListener("focusin", focusInHandler, true);
   // Create the modal element and container for the form
   const modalElement = createNewModalElement(title);
   const formContainer = modalElement;
@@ -1080,8 +1079,8 @@ function createModalStyle() {
         transition: background-color 0.3s ease;
       }
     .modal-content {
-      width: 90%;
-      max-width:800px;
+      width: 80%;
+      max-width:700px;
       overflow:hidden;
       display: flex;
       flex-direction: column;
@@ -1101,9 +1100,9 @@ function createModalStyle() {
       margin-bottom: 10px; 
     }
     input, button {
-      padding: 14px 22px;
-      margin-top: 12px;
-      font-size: 24px;
+      padding: 7px 11px;
+      margin-top: 6px;
+      font-size: 16px;
       width: 100%;
       box-sizing: border-box;
     }
@@ -1123,7 +1122,11 @@ function createModalStyle() {
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      padding: 10px 20px;             
+      font-size: 16px;                
+      max-width: 100%;
       transition: background-color 0.3s, box-shadow 0.3s;
+      white-space: nowrap;
     }
     button:hover, button:focus {
       background-color: #0056b3;
@@ -1155,14 +1158,15 @@ function createBottomBarStyle() {
       padding: 0 20px; 
     }
     #bottom-bar .demo-name {
+      padding-left: 20px;
       flex-grow: 1;
-      font-size:24px;
+      font-size: 18px;
       font-weight: bold; 
-      line-height: 70px; 
+      line-height: 50px; 
     }
     #bottom-bar button {
-      padding: 10px 20px;
-      font-size: 24px;
+      padding: 6px 12px;
+      font-size: 16px;
       border: none;
       background-color: #007bff; 
       color: #fff;
@@ -1221,7 +1225,7 @@ function removeModalElement() {
   if (modalWrapper) {
     modalWrapper.remove();
   }
-  document.removeEventListener('focusin', focusInHandler, true);
+  document.removeEventListener("focusin", focusInHandler, true);
 }
 
 function displayErrorModal(message, retryHandler) {
@@ -1246,7 +1250,6 @@ function createMessageElement(text, styles = {}) {
   Object.assign(messageElement.style, styles);
   return messageElement;
 }
-
 
 function createNewEntityId(entityName, spaceId) {
   const firstSegment = spaceId.split("-")[0];
