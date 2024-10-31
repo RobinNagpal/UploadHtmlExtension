@@ -12,10 +12,10 @@ const DEMO_NAME_INPUT_ID = "demo-name-input";
 const DEMO_DESCRIPTION_INPUT_ID = "demo-description-input";
 const FILE_NAME_INPUT_ID = "file-name-input";
 
-document.addEventListener('focusin', event => {
+function focusInHandler(event) {
   event.stopPropagation();
   event.preventDefault();
-}, true);
+}
 
 
 browser.runtime.onMessage.addListener(async (message) => {
@@ -875,6 +875,7 @@ function createModalForm({
   cancelButtonClass = "cancel-button",
   cancelButtonHandler,
 }) {
+  document.addEventListener('focusin', focusInHandler, true);
   // Create the modal element and container for the form
   const modalElement = createNewModalElement(title);
   const formContainer = modalElement;
@@ -1220,6 +1221,7 @@ function removeModalElement() {
   if (modalWrapper) {
     modalWrapper.remove();
   }
+  document.removeEventListener('focusin', focusInHandler, true);
 }
 
 function displayErrorModal(message, retryHandler) {
