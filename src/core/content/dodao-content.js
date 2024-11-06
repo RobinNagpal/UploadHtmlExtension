@@ -168,13 +168,13 @@ async function showCollectionSelection(
 async function fetchCollections(spaceId) {
   try {
     const response = await fetch(
-      `${DODAO_API_BASE_URL}/api/byte-collection/byte-collections?spaceId=${spaceId}`
+      `${DODAO_API_BASE_URL}/api/${spaceId}/byte-collections`
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    return data.byteCollections || [];
+    return data || [];
   } catch (error) {
     console.error("Failed to fetch collections:", error);
     return null;

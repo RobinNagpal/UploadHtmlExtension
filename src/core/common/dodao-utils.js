@@ -5,16 +5,43 @@ export const CLIKABLE_FILES_HOST_URL = "https://dodao-prod-public-assets.s3.amaz
 
 export function injectScriptLinkTags(htmlContent) {
   console.log("Injecting script and link tags into HTML content");
-  const insertionIndex = findInsertionIndex(htmlContent);
+  // Add `allow-same-origin` to iframes
+  const updatedHtmlContent = addAllowSameOriginToIframes(htmlContent);
+  const insertionIndex = findInsertionIndex(updatedHtmlContent);
 
   if (insertionIndex !== undefined) {
     const tags = getScriptLinkTags();
-    const modifiedHtml = insertTagsIntoHtml(htmlContent, insertionIndex, tags);
+    const modifiedHtml = insertTagsIntoHtml(updatedHtmlContent, insertionIndex, tags);
     return modifiedHtml;
   } else {
     console.warn("Unable to find opening style tag in HTML content");
     return htmlContent; // Return unmodified content if the style tag is not found
   }
+}
+
+function addAllowSameOriginToIframes(htmlContent) {
+  // Regular expression to find all <iframe> tags
+  return htmlContent.replace(/<iframe([^>]*)>/g, (match, attributes) => {
+    // Check if `sandbox` attribute exists
+    const sandboxMatch = attributes.match(/sandbox="([^"]*)"/);
+    if (sandboxMatch) {
+      // `sandbox` attribute exists, check if `allow-same-origin` is already present
+      const sandboxValue = sandboxMatch[1];
+      if (!sandboxValue.includes("allow-same-origin")) {
+        // Append `allow-same-origin` to existing `sandbox` value
+        const newSandboxValue = `sandbox="${sandboxValue} allow-same-origin"`;
+        return `<iframe${attributes.replace(
+          sandboxMatch[0],
+          newSandboxValue
+        )}>`;
+      }
+    } else {
+      // `sandbox` attribute does not exist, add it with `allow-same-origin`
+      return `<iframe${attributes} sandbox="allow-same-origin">`;
+    }
+    // If `allow-same-origin` is already present, return the original match
+    return match;
+  });
 }
 
 export function slugify(string) {
