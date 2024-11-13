@@ -54,14 +54,6 @@
 	"background": {
 		"service_worker": "lib/single-file-extension-background.js"
 	},
-	"side_panel": {
-		"default_path": "src/ui/pages/panel.html"
-	},
-	"options_ui": {
-		"browser_style": true,
-		"page": "src/ui/pages/options.html",
-		"open_in_tab": false
-	},
 	"action": {
 		"default_icon": {
 			"16": "src/ui/resources/icon_16.png",
@@ -71,20 +63,7 @@
 		},
 		"default_title": "__MSG_buttonDefaultTooltip__"
 	},
-	"commands": {
-		"save-selected-tabs": {
-			"suggested_key": {
-				"default": "Ctrl+Shift+Y"
-			},
-			"description": "__MSG_commandSaveSelectedTabs__"
-		},
-		"save-all-tabs": {
-			"suggested_key": {
-				"default": "Ctrl+Shift+U"
-			},
-			"description": "__MSG_commandSaveAllTabs__"
-		}
-	},
+	"commands": {},
 	"web_accessible_resources": [
 		{
 			"matches": [

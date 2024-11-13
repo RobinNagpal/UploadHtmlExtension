@@ -596,15 +596,22 @@ function setupBottomBarWithDemo(
     }
   );
 
+  // Create the close button
+  const closeButton = createButton("✕", "close-button", async () => {
+    bottomBar.style.display = "none";
+  });
+
   const buttonContainer = document.createElement("div");
   buttonContainer.style.display = "flex";
   buttonContainer.style.gap = "10px";
   buttonContainer.appendChild(saveButton);
   buttonContainer.appendChild(chooseAnotherButton);
 
+  // Append elements to the bottom bar
   bottomBar.appendChild(logoutButton);
   bottomBar.appendChild(demoTitle);
   bottomBar.appendChild(buttonContainer);
+  bottomBar.appendChild(closeButton); // Append close button last, for right alignment
 
   document.body.appendChild(bottomBar);
 }
@@ -875,6 +882,7 @@ function createModalForm({
   cancelButtonHandler,
 }) {
   document.addEventListener("focusin", focusInHandler, true);
+
   // Create the modal element and container for the form
   const modalElement = createNewModalElement(title);
   const formContainer = modalElement;
@@ -900,6 +908,10 @@ function createModalForm({
     formContainer.appendChild(inputElement);
     // Store the input element reference inside the inputConfig object
     inputConfig.element = inputElement;
+  });
+
+  requestAnimationFrame(() => {
+    inputs[0].element.focus();
   });
 
   // Create the submit button
@@ -1177,6 +1189,21 @@ function createBottomBarStyle() {
     }
     #bottom-bar button:hover {
       background-color: #0056b3; 
+    }
+    #bottom-bar .close-button {
+      font-size: 18px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      padding: 5px 10px;
+      margin-left: 20px;
+      transition: color 0.2s;
+    }
+
+    #bottom-bar .close-button:hover {
+      color: #888; /* Light gray on hover */
+      background-color: #e34257;
     }
   `;
   return styleElement;
