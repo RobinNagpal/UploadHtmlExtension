@@ -2,10 +2,11 @@ import * as ui from "./../../ui/content/content-ui.js";
 
 export async function getDodaoScreenshotBlobUrl(options) {
   ui.setVisible(false);
+
   const screenshotBlobURI = await browser.runtime.sendMessage({
     method: "tabs.getScreenshot",
-    width: document.documentElement.scrollWidth,
-    height: document.documentElement.scrollHeight,
+    width: window.innerWidth,
+    height: window.innerHeight,
     innerHeight: globalThis.innerHeight,
   });
   ui.setVisible(true);

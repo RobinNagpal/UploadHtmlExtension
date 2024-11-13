@@ -698,7 +698,7 @@ async function createDemo(
 
   try {
     const response = await fetch(
-      `${DODAO_API_BASE_URL}/api/${spaceId}/clickable-demos?clickableDemoId=${demoId}`,
+      `${DODAO_API_BASE_URL}/api/${spaceId}/clickable-demos/${demoId}`,
       {
         method: "POST",
         headers: {
