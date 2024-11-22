@@ -1,15 +1,27 @@
 import { v4 as uuidv4 } from "uuid";
-import {
-  DODAO_API_BASE_URL, slugify,
-} from "../common/dodao-utils.js";
+import { DODAO_API_BASE_URL, slugify } from "../common/dodao-utils.js";
 export function init() {}
+
+const SPACE_ID_INPUT_ID = "space-id-input";
+const API_KEY_INPUT_ID = "api-key-input";
+const COLLECTION_NAME_INPUT_ID = "collection-name-input";
+const COLLECTION_DESCRIPTION_INPUT_ID = "collection-description-input";
+const DEMO_NAME_INPUT_ID = "demo-name-input";
+const DEMO_DESCRIPTION_INPUT_ID = "demo-description-input";
+const FILE_NAME_INPUT_ID = "file-name-input";
+
+function focusInHandler(event) {
+  event.stopPropagation();
+  event.preventDefault();
+}
+
 browser.runtime.onMessage.addListener(async (message) => {
   if (message.method === "dodaoContent.captureApiKey") {
     showSaveApiKeyAndSpaceIdScreen(message);
     return {};
   }
   if (message.method === "dodaoContent.selectClickableDemo") {
-    showsaveClickableDemoScreen(message);
+    showSaveClickableDemoScreen(message);
     return {};
   }
   if (message.method === "dodaoContent.renderBottomBar") {
@@ -56,7 +68,7 @@ function showSaveApiKeyAndSpaceIdScreen(message) {
   }
 }
 
-async function showsaveClickableDemoScreen(message) {
+async function showSaveClickableDemoScreen(message) {
   if (message.data.error) {
     showErrorNotification(message.data.error);
     setTimeout(async () => {
@@ -82,6 +94,7 @@ function showLoginScreen(message) {
     {
       className: "space-id-input",
       placeholder: "Enter your Space ID",
+      id: SPACE_ID_INPUT_ID,
       styles: {
         width: "90%",
         padding: "10px",
@@ -90,6 +103,7 @@ function showLoginScreen(message) {
     },
     {
       className: "api-key-input",
+      id: API_KEY_INPUT_ID,
       placeholder: "Enter your API key from the space settings page:",
       styles: {
         width: "90%",
@@ -154,13 +168,13 @@ async function showCollectionSelection(
 async function fetchCollections(spaceId) {
   try {
     const response = await fetch(
-      `${DODAO_API_BASE_URL}/api/byte-collection/byte-collections?spaceId=${spaceId}`
+      `${DODAO_API_BASE_URL}/api/${spaceId}/byte-collections`
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    return data.byteCollections || [];
+    return data || [];
   } catch (error) {
     console.error("Failed to fetch collections:", error);
     return null;
@@ -217,7 +231,11 @@ function showCollectionList(
     collections.length > 0
       ? "Select a Collection from the List Below:"
       : "No collections found. Create a new collection.",
-    { marginBottom: "10px", color: "#FFF" }
+    { 
+      marginBottom: "10px", 
+      color: "#FFF", 
+      fontSize: "20px" 
+    }
   );
 
   const collectionList = document.createElement("div");
@@ -242,6 +260,7 @@ function showCollectionList(
       marginTop: "20px",
       marginBottom: "10px",
       color: "#FFF",
+      fontSize: "20px",
     }
   );
   const createCollectionButton = createButton(
@@ -283,6 +302,7 @@ function showCreateCollectionScreen(
     {
       className: "collection-name-input",
       placeholder: "Enter collection name",
+      id: COLLECTION_NAME_INPUT_ID,
       styles: {
         width: "90%",
         padding: "10px",
@@ -292,6 +312,7 @@ function showCreateCollectionScreen(
     {
       className: "collection-description-input",
       placeholder: "Enter collection description",
+      id: COLLECTION_DESCRIPTION_INPUT_ID,
       styles: {
         width: "90%",
         padding: "10px",
@@ -428,7 +449,7 @@ function showDemoList(
     demos.length > 0
       ? "Select a Demo from the List Below:"
       : "No demos found. Create a new demo.",
-    { marginBottom: "10px", color: "#FFF" }
+    { marginBottom: "10px", color: "#FFF", fontSize: "20px" }
   );
 
   const demoList = document.createElement("div");
@@ -448,6 +469,7 @@ function showDemoList(
     marginTop: "20px",
     marginBottom: "10px",
     color: "#FFF",
+    fontSize: "20px",
   });
 
   const createDemoButton = createButton(
@@ -541,9 +563,9 @@ function setupBottomBarWithDemo(
     removeModalElement();
     showLoginScreen();
   });
-  logoutButton.style.marginLeft = "10px";
-  logoutButton.style.marginRight = "10px";
-  logoutButton.style.width = "10%";
+  logoutButton.style.marginLeft = "5px";
+  logoutButton.style.marginRight = "5px";
+  logoutButton.style.width = "8%";
 
   const demoTitle = document.createElement("span");
   demoTitle.id = selectedClickableDemo.id;
@@ -574,15 +596,22 @@ function setupBottomBarWithDemo(
     }
   );
 
+  // Create the close button
+  const closeButton = createButton("✕", "close-button", async () => {
+    bottomBar.style.display = "none";
+  });
+
   const buttonContainer = document.createElement("div");
   buttonContainer.style.display = "flex";
   buttonContainer.style.gap = "10px";
   buttonContainer.appendChild(saveButton);
   buttonContainer.appendChild(chooseAnotherButton);
 
+  // Append elements to the bottom bar
   bottomBar.appendChild(logoutButton);
   bottomBar.appendChild(demoTitle);
   bottomBar.appendChild(buttonContainer);
+  bottomBar.appendChild(closeButton); // Append close button last, for right alignment
 
   document.body.appendChild(bottomBar);
 }
@@ -597,6 +626,7 @@ function showCreateDemoScreen(
     {
       className: "demo-name-input",
       placeholder: "Enter demo name",
+      id: DEMO_NAME_INPUT_ID,
       styles: {
         width: "90%",
         padding: "10px",
@@ -606,6 +636,7 @@ function showCreateDemoScreen(
     {
       className: "demo-description-input",
       placeholder: "Enter demo description",
+      id: DEMO_DESCRIPTION_INPUT_ID,
       styles: {
         width: "90%",
         padding: "10px",
@@ -737,7 +768,7 @@ function addLogoutButton() {
 
 async function captureScreenHtml(spaceId, apiKey, demo, collection) {
   const demoId = demo.demoId;
-  const apiUrl = `${DODAO_API_BASE_URL}/api/${spaceId}/html-captures/${demoId}`;
+  const apiUrl = `${DODAO_API_BASE_URL}/api/${spaceId}/html-captures?clickableDemoId=${demoId}`;
   let existingFiles = [];
   try {
     const response = await fetch(apiUrl, {
@@ -780,6 +811,7 @@ async function captureScreenHtml(spaceId, apiKey, demo, collection) {
     {
       className: "file-name-input",
       placeholder: "Enter file name",
+      id: FILE_NAME_INPUT_ID,
       styles: {
         width: "90%",
         marginBottom: "10px",
@@ -849,6 +881,8 @@ function createModalForm({
   cancelButtonClass = "cancel-button",
   cancelButtonHandler,
 }) {
+  document.addEventListener("focusin", focusInHandler, true);
+
   // Create the modal element and container for the form
   const modalElement = createNewModalElement(title);
   const formContainer = modalElement;
@@ -870,9 +904,14 @@ function createModalForm({
       inputConfig.className || "",
       inputConfig.styles || {}
     );
+    inputElement.id = inputConfig.id;
     formContainer.appendChild(inputElement);
     // Store the input element reference inside the inputConfig object
     inputConfig.element = inputElement;
+  });
+
+  requestAnimationFrame(() => {
+    inputs[0].element.focus();
   });
 
   // Create the submit button
@@ -940,6 +979,7 @@ function createNewModalElement(
   }
   const fullScreenModalWrapper = document.createElement("div");
   fullScreenModalWrapper.id = "dodao-full-screen-modal-wrapper";
+
   document.body.appendChild(fullScreenModalWrapper);
   const shadowRoot = fullScreenModalWrapper.attachShadow({ mode: "open" });
   shadowRoot.appendChild(createModalStyle());
@@ -988,6 +1028,8 @@ function createModalStyle() {
       position: fixed;
       top: 0;
       left: 0;
+      bottom: 0;
+      right: 0;
       font-size: 24px;
       flex-direction: column;
       width: 100%;
@@ -1044,8 +1086,8 @@ function createModalStyle() {
         transition: background-color 0.3s ease;
       }
     .modal-content {
-      width: 90%;
-      max-width:800px;
+      width: 80%;
+      max-width:700px;
       overflow:hidden;
       display: flex;
       flex-direction: column;
@@ -1065,9 +1107,9 @@ function createModalStyle() {
       margin-bottom: 10px; 
     }
     input, button {
-      padding: 14px 22px;
-      margin-top: 12px;
-      font-size: 24px;
+      padding: 7px 11px;
+      margin-top: 6px;
+      font-size: 16px;
       width: 100%;
       box-sizing: border-box;
     }
@@ -1087,7 +1129,11 @@ function createModalStyle() {
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      padding: 10px 20px;             
+      font-size: 16px;                
+      max-width: 100%;
       transition: background-color 0.3s, box-shadow 0.3s;
+      white-space: nowrap;
     }
     button:hover, button:focus {
       background-color: #0056b3;
@@ -1119,14 +1165,15 @@ function createBottomBarStyle() {
       padding: 0 20px; 
     }
     #bottom-bar .demo-name {
+      padding-left: 20px;
       flex-grow: 1;
-      font-size:24px;
+      font-size: 18px;
       font-weight: bold; 
-      line-height: 70px; 
+      line-height: 50px; 
     }
     #bottom-bar button {
-      padding: 10px 20px;
-      font-size: 24px;
+      padding: 6px 12px;
+      font-size: 16px;
       border: none;
       background-color: #007bff; 
       color: #fff;
@@ -1142,6 +1189,21 @@ function createBottomBarStyle() {
     }
     #bottom-bar button:hover {
       background-color: #0056b3; 
+    }
+    #bottom-bar .close-button {
+      font-size: 18px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      padding: 5px 10px;
+      margin-left: 20px;
+      transition: color 0.2s;
+    }
+
+    #bottom-bar .close-button:hover {
+      color: #888; /* Light gray on hover */
+      background-color: #e34257;
     }
   `;
   return styleElement;
@@ -1185,6 +1247,7 @@ function removeModalElement() {
   if (modalWrapper) {
     modalWrapper.remove();
   }
+  document.removeEventListener("focusin", focusInHandler, true);
 }
 
 function displayErrorModal(message, retryHandler) {
@@ -1209,7 +1272,6 @@ function createMessageElement(text, styles = {}) {
   Object.assign(messageElement.style, styles);
   return messageElement;
 }
-
 
 function createNewEntityId(entityName, spaceId) {
   const firstSegment = spaceId.split("-")[0];

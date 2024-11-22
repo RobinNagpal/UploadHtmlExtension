@@ -26,8 +26,7 @@
 import * as yabson from "./../../lib/yabson/yabson.js";
 import * as ui from "./../../ui/content/content-ui.js";
 import { getSharePageBar, setLabels } from "./../../ui/common/common-content-ui.js";
-import html2canvas from "html2canvas";
-import {getDodaoScreenshotBlobUrl} from "./dodao-screenshot.js";
+import { getDodaoScreenshotBlobUrl } from "./dodao-screenshot.js";
 
 const MAX_CONTENT_SIZE = 16 * (1024 * 1024);
 
@@ -129,7 +128,6 @@ async function downloadPage(pageData, options) {
 		}
 		if (pageData.filename) {
 			if (options.saveWithTidbitsHub) {
-				// we capture screenshot using options.content as it contains whole page content for the screesnhot
 				message.dodaoScreenshotBlobUrl = await getDodaoScreenshotBlobUrl(options.content);
 			}
 			const blob = new Blob([await yabson.serialize(pageData)], { type: pageData.mimeType });
@@ -172,10 +170,6 @@ async function downloadPage(pageData, options) {
 			if (filename) {
 				message.filename = pageData.filename = filename;
 				pageData.filename = options.captureHtmlScreenFileName;
-
-				if(options.saveWithTidbitsHub) {
-					message.dodaoScreenshotBlobUrl = await getDodaoScreenshotBlobUrl(pageData.content);
-				}
 
 				const blobURL = URL.createObjectURL(new Blob([pageData.content], { type: pageData.mimeType }));
 				message.blobURL = blobURL;

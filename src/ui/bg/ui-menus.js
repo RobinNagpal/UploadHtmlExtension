@@ -143,16 +143,16 @@ async function createMenus(tab) {
 			contexts: defaultContexts,
 			title: MENU_SAVE_PAGE_MESSAGE
 		});
-		menus.create({
-			id: MENU_ID_EDIT_AND_SAVE_PAGE,
-			contexts: defaultContexts,
-			title: MENU_EDIT_AND_SAVE_PAGE_MESSAGE
-		});
-		menus.create({
-			id: MENU_ID_SAVE_SELECTED_LINKS,
-			contexts: options.contextMenuEnabled ? defaultContextsDisabled.concat(["selection"]) : defaultContextsDisabled,
-			title: MENU_SAVE_SELECTED_LINKS
-		});
+		// menus.create({
+		// 	id: MENU_ID_EDIT_AND_SAVE_PAGE,
+		// 	contexts: defaultContexts,
+		// 	title: MENU_EDIT_AND_SAVE_PAGE_MESSAGE
+		// });
+		// menus.create({
+		// 	id: MENU_ID_SAVE_SELECTED_LINKS,
+		// 	contexts: options.contextMenuEnabled ? defaultContextsDisabled.concat(["selection"]) : defaultContextsDisabled,
+		// 	title: MENU_SAVE_SELECTED_LINKS
+		// });
 		if (Object.keys(profiles).length > 1) {
 			menus.create({
 				id: MENU_ID_SAVE_WITH_PROFILE,
@@ -167,11 +167,11 @@ async function createMenus(tab) {
 				type: "separator"
 			});
 		}
-		menus.create({
-			id: MENU_ID_SAVE_SELECTED,
-			contexts: defaultContexts,
-			title: MENU_SAVE_SELECTION_MESSAGE
-		});
+		// menus.create({
+		// 	id: MENU_ID_SAVE_SELECTED,
+		// 	contexts: defaultContexts,
+		// 	title: MENU_SAVE_SELECTION_MESSAGE
+		// });
 		if (options.contextMenuEnabled) {
 			menus.create({
 				id: MENU_ID_SAVE_FRAME,
@@ -179,29 +179,29 @@ async function createMenus(tab) {
 				title: MENU_SAVE_FRAME_MESSAGE
 			});
 		}
-		menus.create({
-			id: MENU_ID_SAVE_TABS,
-			contexts: defaultContextsDisabled,
-			title: MENU_SAVE_TABS_MESSAGE
-		});
-		menus.create({
-			id: MENU_ID_BUTTON_SAVE_SELECTED_TABS,
-			contexts: defaultContextsDisabled,
-			title: MENU_SAVE_SELECTED_TABS_MESSAGE,
-			parentId: MENU_ID_SAVE_TABS
-		});
-		menus.create({
-			id: MENU_ID_BUTTON_SAVE_UNPINNED_TABS,
-			contexts: defaultContextsDisabled,
-			title: MENU_SAVE_UNPINNED_TABS_MESSAGE,
-			parentId: MENU_ID_SAVE_TABS
-		});
-		menus.create({
-			id: MENU_ID_BUTTON_SAVE_ALL_TABS,
-			contexts: defaultContextsDisabled,
-			title: MENU_SAVE_ALL_TABS_MESSAGE,
-			parentId: MENU_ID_SAVE_TABS
-		});
+		// menus.create({
+		// 	id: MENU_ID_SAVE_TABS,
+		// 	contexts: defaultContextsDisabled,
+		// 	title: MENU_SAVE_TABS_MESSAGE
+		// });
+		// menus.create({
+		// 	id: MENU_ID_BUTTON_SAVE_SELECTED_TABS,
+		// 	contexts: defaultContextsDisabled,
+		// 	title: MENU_SAVE_SELECTED_TABS_MESSAGE,
+		// 	parentId: MENU_ID_SAVE_TABS
+		// });
+		// menus.create({
+		// 	id: MENU_ID_BUTTON_SAVE_UNPINNED_TABS,
+		// 	contexts: defaultContextsDisabled,
+		// 	title: MENU_SAVE_UNPINNED_TABS_MESSAGE,
+		// 	parentId: MENU_ID_SAVE_TABS
+		// });
+		// menus.create({
+		// 	id: MENU_ID_BUTTON_SAVE_ALL_TABS,
+		// 	contexts: defaultContextsDisabled,
+		// 	title: MENU_SAVE_ALL_TABS_MESSAGE,
+		// 	parentId: MENU_ID_SAVE_TABS
+		// });
 		if (options.contextMenuEnabled) {
 			menus.create({
 				id: MENU_ID_SAVE_SELECTED_TABS,
@@ -323,57 +323,57 @@ async function createMenus(tab) {
 				});
 			}
 		}
-		menus.create({
-			id: MENU_ID_AUTO_SAVE,
-			contexts: defaultContexts,
-			title: MENU_AUTOSAVE_MESSAGE
-		});
-		menus.create({
-			id: MENU_ID_AUTO_SAVE_DISABLED,
-			type: "radio",
-			title: MENU_AUTOSAVE_DISABLED_MESSAGE,
-			contexts: defaultContexts,
-			checked: true,
-			parentId: MENU_ID_AUTO_SAVE
-		});
-		menusCheckedState.set(MENU_ID_AUTO_SAVE_DISABLED, true);
-		menus.create({
-			id: MENU_ID_AUTO_SAVE_TAB,
-			type: "radio",
-			title: MENU_AUTOSAVE_TAB_MESSAGE,
-			contexts: defaultContexts,
-			checked: false,
-			parentId: MENU_ID_AUTO_SAVE
-		});
-		menusCheckedState.set(MENU_ID_AUTO_SAVE_TAB, false);
-		menus.create({
-			id: MENU_ID_AUTO_SAVE_UNPINNED,
-			type: "radio",
-			title: MENU_AUTOSAVE_UNPINNED_TABS_MESSAGE,
-			contexts: defaultContexts,
-			checked: false,
-			parentId: MENU_ID_AUTO_SAVE
-		});
-		menusCheckedState.set(MENU_ID_AUTO_SAVE_UNPINNED, false);
-		menus.create({
-			id: MENU_ID_AUTO_SAVE_ALL,
-			type: "radio",
-			title: MENU_AUTOSAVE_ALL_TABS_MESSAGE,
-			contexts: defaultContexts,
-			checked: false,
-			parentId: MENU_ID_AUTO_SAVE
-		});
-		menusCheckedState.set(MENU_ID_AUTO_SAVE_ALL, false);
+		// menus.create({
+		// 	id: MENU_ID_AUTO_SAVE,
+		// 	contexts: defaultContexts,
+		// 	title: MENU_AUTOSAVE_MESSAGE
+		// });
+		// menus.create({
+		// 	id: MENU_ID_AUTO_SAVE_DISABLED,
+		// 	type: "radio",
+		// 	title: MENU_AUTOSAVE_DISABLED_MESSAGE,
+		// 	contexts: defaultContexts,
+		// 	checked: true,
+		// 	parentId: MENU_ID_AUTO_SAVE
+		// });
+		// menusCheckedState.set(MENU_ID_AUTO_SAVE_DISABLED, true);
+		// menus.create({
+		// 	id: MENU_ID_AUTO_SAVE_TAB,
+		// 	type: "radio",
+		// 	title: MENU_AUTOSAVE_TAB_MESSAGE,
+		// 	contexts: defaultContexts,
+		// 	checked: false,
+		// 	parentId: MENU_ID_AUTO_SAVE
+		// });
+		// menusCheckedState.set(MENU_ID_AUTO_SAVE_TAB, false);
+		// menus.create({
+		// 	id: MENU_ID_AUTO_SAVE_UNPINNED,
+		// 	type: "radio",
+		// 	title: MENU_AUTOSAVE_UNPINNED_TABS_MESSAGE,
+		// 	contexts: defaultContexts,
+		// 	checked: false,
+		// 	parentId: MENU_ID_AUTO_SAVE
+		// });
+		// menusCheckedState.set(MENU_ID_AUTO_SAVE_UNPINNED, false);
+		// menus.create({
+		// 	id: MENU_ID_AUTO_SAVE_ALL,
+		// 	type: "radio",
+		// 	title: MENU_AUTOSAVE_ALL_TABS_MESSAGE,
+		// 	contexts: defaultContexts,
+		// 	checked: false,
+		// 	parentId: MENU_ID_AUTO_SAVE
+		// });
+		// menusCheckedState.set(MENU_ID_AUTO_SAVE_ALL, false);
 		menus.create({
 			id: "separator-4",
 			contexts: defaultContexts,
 			type: "separator"
 		});
-		menus.create({
-			id: MENU_ID_BATCH_SAVE_URLS,
-			contexts: defaultContexts,
-			title: MENU_BATCH_SAVE_URLS_MESSAGE
-		});
+		// menus.create({
+		// 	id: MENU_ID_BATCH_SAVE_URLS,
+		// 	contexts: defaultContexts,
+		// 	title: MENU_BATCH_SAVE_URLS_MESSAGE
+		// });
 		menus.create({
 			id: MENU_ID_VIEW_PENDINGS,
 			contexts: defaultContexts,
@@ -397,27 +397,27 @@ async function initialize() {
 				business.saveTabs([tab]);
 			}
 		}
-		if (event.menuItemId == MENU_ID_EDIT_AND_SAVE_PAGE) {
-			const allTabsData = await tabsData.get(tab.id);
-			if (allTabsData[tab.id].savedPageDetected) {
-				business.openEditor(tab);
-			} else {
-				if (event.linkUrl) {
-					business.saveUrls([event.linkUrl], { openEditor: true });
-				} else {
-					business.saveTabs([tab], { openEditor: true });
-				}
-			}
-		}
+		// if (event.menuItemId == MENU_ID_EDIT_AND_SAVE_PAGE) {
+		// 	const allTabsData = await tabsData.get(tab.id);
+		// 	if (allTabsData[tab.id].savedPageDetected) {
+		// 		business.openEditor(tab);
+		// 	} else {
+		// 		if (event.linkUrl) {
+		// 			business.saveUrls([event.linkUrl], { openEditor: true });
+		// 		} else {
+		// 			business.saveTabs([tab], { openEditor: true });
+		// 		}
+		// 	}
+		// }
 		if (event.menuItemId == MENU_ID_SAVE_SELECTED_LINKS) {
 			business.saveSelectedLinks(tab);
 		}
 		if (event.menuItemId == MENU_ID_VIEW_PENDINGS) {
 			await browser.tabs.create({ active: true, url: "/src/ui/pages/pendings.html" });
 		}
-		if (event.menuItemId == MENU_ID_SAVE_SELECTED) {
-			business.saveTabs([tab], { selected: true });
-		}
+		// if (event.menuItemId == MENU_ID_SAVE_SELECTED) {
+		// 	business.saveTabs([tab], { selected: true });
+		// }
 		if (event.menuItemId == MENU_ID_SAVE_FRAME) {
 			business.saveTabs([tab], { frameId: event.frameId });
 		}
@@ -436,35 +436,35 @@ async function initialize() {
 		if (event.menuItemId == MENU_ID_BATCH_SAVE_URLS) {
 			business.batchSaveUrls();
 		}
-		if (event.menuItemId == MENU_ID_AUTO_SAVE_TAB) {
-			const allTabsData = await tabsData.get(tab.id);
-			allTabsData[tab.id].autoSave = true;
-			await tabsData.set(allTabsData);
-			refreshExternalComponents(tab);
-		}
-		if (event.menuItemId == MENU_ID_AUTO_SAVE_DISABLED) {
-			const allTabsData = await tabsData.get();
-			Object.keys(allTabsData).forEach(tabId => {
-				if (typeof allTabsData[tabId] == "object" && allTabsData[tabId].autoSave) {
-					allTabsData[tabId].autoSave = false;
-				}
-			});
-			allTabsData.autoSaveUnpinned = allTabsData.autoSaveAll = false;
-			await tabsData.set(allTabsData);
-			refreshExternalComponents(tab);
-		}
-		if (event.menuItemId == MENU_ID_AUTO_SAVE_ALL) {
-			const allTabsData = await tabsData.get();
-			allTabsData.autoSaveAll = event.checked;
-			await tabsData.set(allTabsData);
-			refreshExternalComponents(tab);
-		}
-		if (event.menuItemId == MENU_ID_AUTO_SAVE_UNPINNED) {
-			const allTabsData = await tabsData.get();
-			allTabsData.autoSaveUnpinned = event.checked;
-			await tabsData.set(allTabsData);
-			refreshExternalComponents(tab);
-		}
+		// if (event.menuItemId == MENU_ID_AUTO_SAVE_TAB) {
+		// 	const allTabsData = await tabsData.get(tab.id);
+		// 	allTabsData[tab.id].autoSave = true;
+		// 	await tabsData.set(allTabsData);
+		// 	refreshExternalComponents(tab);
+		// }
+		// if (event.menuItemId == MENU_ID_AUTO_SAVE_DISABLED) {
+		// 	const allTabsData = await tabsData.get();
+		// 	Object.keys(allTabsData).forEach(tabId => {
+		// 		if (typeof allTabsData[tabId] == "object" && allTabsData[tabId].autoSave) {
+		// 			allTabsData[tabId].autoSave = false;
+		// 		}
+		// 	});
+		// 	allTabsData.autoSaveUnpinned = allTabsData.autoSaveAll = false;
+		// 	await tabsData.set(allTabsData);
+		// 	refreshExternalComponents(tab);
+		// }
+		// if (event.menuItemId == MENU_ID_AUTO_SAVE_ALL) {
+		// 	const allTabsData = await tabsData.get();
+		// 	allTabsData.autoSaveAll = event.checked;
+		// 	await tabsData.set(allTabsData);
+		// 	refreshExternalComponents(tab);
+		// }
+		// if (event.menuItemId == MENU_ID_AUTO_SAVE_UNPINNED) {
+		// 	const allTabsData = await tabsData.get();
+		// 	allTabsData.autoSaveUnpinned = event.checked;
+		// 	await tabsData.set(allTabsData);
+		// 	refreshExternalComponents(tab);
+		// }
 		if (event.menuItemId.startsWith(MENU_ID_SAVE_WITH_PROFILE_PREFIX)) {
 			const profiles = await config.getProfiles();
 			const profileId = event.menuItemId.split(MENU_ID_SAVE_WITH_PROFILE_PREFIX)[1];
@@ -536,16 +536,16 @@ async function refreshTab(tab) {
 			updateAllVisibleValues(false);
 		} else {
 			updateAllVisibleValues(true);
-			promises.push(updateCheckedValue(MENU_ID_AUTO_SAVE_DISABLED, !allTabsData[tab.id].autoSave));
-			promises.push(updateCheckedValue(MENU_ID_AUTO_SAVE_TAB, allTabsData[tab.id].autoSave));
-			promises.push(updateCheckedValue(MENU_ID_AUTO_SAVE_UNPINNED, Boolean(allTabsData.autoSaveUnpinned)));
-			promises.push(updateCheckedValue(MENU_ID_AUTO_SAVE_ALL, Boolean(allTabsData.autoSaveAll)));
+			// promises.push(updateCheckedValue(MENU_ID_AUTO_SAVE_DISABLED, !allTabsData[tab.id].autoSave));
+			// promises.push(updateCheckedValue(MENU_ID_AUTO_SAVE_TAB, allTabsData[tab.id].autoSave));
+			// promises.push(updateCheckedValue(MENU_ID_AUTO_SAVE_UNPINNED, Boolean(allTabsData.autoSaveUnpinned)));
+			// promises.push(updateCheckedValue(MENU_ID_AUTO_SAVE_ALL, Boolean(allTabsData.autoSaveAll)));
 			if (tab && tab.url) {
 				const options = await config.getOptions(tab.url);
 				promises.push(updateVisibleValue(tab, options.contextMenuEnabled));
-				promises.push(updateTitleValue(MENU_ID_EDIT_AND_SAVE_PAGE, allTabsData[tab.id].savedPageDetected ? MENU_EDIT_PAGE_MESSAGE : MENU_EDIT_AND_SAVE_PAGE_MESSAGE));
-				promises.push(menus.update(MENU_ID_SAVE_SELECTED, { visible: !options.saveRawPage }));
-				promises.push(menus.update(MENU_ID_EDIT_AND_SAVE_PAGE, { visible: !options.openEditor || allTabsData[tab.id].savedPageDetected }));
+				// promises.push(updateTitleValue(MENU_ID_EDIT_AND_SAVE_PAGE, allTabsData[tab.id].savedPageDetected ? MENU_EDIT_PAGE_MESSAGE : MENU_EDIT_AND_SAVE_PAGE_MESSAGE));
+				// promises.push(menus.update(MENU_ID_SAVE_SELECTED, { visible: !options.saveRawPage }));
+				// promises.push(menus.update(MENU_ID_EDIT_AND_SAVE_PAGE, { visible: !options.openEditor || allTabsData[tab.id].savedPageDetected }));
 				let selectedEntryId = MENU_ID_ASSOCIATE_WITH_PROFILE_PREFIX + "default";
 				let title = MENU_CREATE_DOMAIN_RULE_MESSAGE;
 				const [profiles, rule] = await Promise.all([config.getProfiles(), config.getRule(tab.url)]);
